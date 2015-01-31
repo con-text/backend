@@ -2,6 +2,13 @@ var mongoose = require('mongoose');
 var express = require('express');
 var app = express();
 
+var crypto    = require('crypto');
+var hmac;
+var algorithm = 'sha1';
+var key       = 'abcdeg';
+var text      = 'I love cupcakes';
+var hash;
+
 // var keyHandler = require('./lib/handleKeys.js');
 
 var user = require('./schemas/users.js');
@@ -38,7 +45,7 @@ app.get('/auth/:username/:nonce', function(req,res){
 	var username = req.params.username;
 	var nonce = req.params.nonce;
 	console.log("Looking");
-	user.returnEncryptedNonce(username, nonce, function(err,result){
+	user.returnEncryptedNonceAlt(username, nonce, function(err,result){
 		if(err){
 			res.send("null");
 		}
