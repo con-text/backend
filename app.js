@@ -59,7 +59,7 @@ app.get('/test', function(req,res){
 	user.testKey();
 });
 
-var server = app.listen(3000, main);
+var server = app.listen(process.env.port || 3000, main);
 
 function main(){
 	var host = server.address().address;
