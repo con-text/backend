@@ -13,7 +13,7 @@ var hash;
 
 var user = require('./schemas/users.js');
 
-mongoose.connect('mongodb://localhost/con-text');
+mongoose.connect('mongodb://GaRwSRhDWopa:dyOKeHjSoBPc@mongosoup-cont002.mongosoup.de:31693/cc_GaRwSRhDWopa');
 
 db = mongoose.connection;
 
@@ -25,7 +25,7 @@ db.on('error', function(err){
 	console.log("GOT ERROR EVENT");
 	if(err){
 		db.db.close();
-		mongoose.connect('mongodb://localhost/con-text');;
+		mongoose.connect('mongodb://GaRwSRhDWopa:dyOKeHjSoBPc@mongosoup-cont002.mongosoup.de:31693/cc_GaRwSRhDWopa');;
 	}
 });
 
