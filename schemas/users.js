@@ -19,7 +19,7 @@ var model = mongoose.model("users", schema);
 module.exports = {
 	returnEncryptedData: function(username, randomDataFromClient, callback){
 		console.log("Looking for", username);
-		model.findOne({username: username}, function(err,data){
+		model.findOne({uuid: username}, function(err,data){
 			if(err){
 				console.log("error", err);
 				callback(err);
@@ -36,7 +36,7 @@ module.exports = {
 		});
 	},
 	returnDecryptedData: function(username, ourRandomData, callback){
-		model.findOne({username: username}, function(err,data){
+		model.findOne({uuid: username}, function(err,data){
 			if(err){
 				console.log("error", err);
 				callback(err);
