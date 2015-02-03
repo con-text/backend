@@ -60,7 +60,7 @@ app.get('/test', function(req,res){
 });
 
 app.get('/testDB', function(req,res){
-	user.dumpDB(db, function(err, result){
+	user.dumpDB(function(err, result){
 		if(err){
 			res.send("Oh shit");
 		}
