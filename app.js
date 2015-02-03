@@ -59,6 +59,17 @@ app.get('/test', function(req,res){
 	user.testKey();
 });
 
+app.get('/testDB', function(req,res){
+	user.dumpDB(db, function(err, result){
+		if(err){
+			res.send("Oh shit");
+		}
+		else{
+			res.json(result);
+		}
+	});
+});
+
 var server = app.listen(process.env.PORT || 3000, main);
 
 function main(){

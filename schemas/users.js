@@ -85,5 +85,15 @@ module.exports = {
 	testKey: function(){
 		console.log(key.isPrivate());
 		console.log(key.isPublic());
+	},
+	dumpDB: function(callback){
+		model.find({}, function(err,result){
+			if(err || !result){
+				callback(err);
+			}
+			else{
+				callback(null, result);
+			}
+		});
 	}
 };
