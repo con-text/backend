@@ -1,27 +1,24 @@
 var mongoose = require('mongoose');
 var express = require('express');
 var app = express();
-
-var path = require('path');
-
 	
 var	util	 		= require('util'),
 	bodyParser 		= require('body-parser'),
 	cookieParser 	= require('cookie-parser'),
 	session 		= require('express-session'),
 	methodOverride 	= require('method-override'),
-	flash 			= require('connect-flash')
+	flash 			= require('connect-flash'),
+	path 			= require('path');
 
 var user = require('./schemas/users.js');
+
 var passport = require('passport'),
 	LocalStrategy = require('passport-local').Strategy;
-
-var crypto    = require('crypto');
 
 
 var mongoPath = 'mongodb://GaRwSRhDWopa:dyOKeHjSoBPc@mongosoup-cont002.mongosoup.de:31693/cc_GaRwSRhDWopa';
 
-// var keyHandler = require('./lib/handleKeys.js');
+
 
 app.use(cookieParser());
 app.use(methodOverride());
@@ -31,6 +28,8 @@ app.use(session({
 	resave: false,
 	saveUninitialized: false
 }));
+
+
 // Initialize Passport!  Also use passport.session() middleware, to support
 // persistent login sessions (recommended).
 app.use(passport.initialize());
@@ -38,7 +37,6 @@ app.use(passport.session());
 app.use(flash());
 
 mongoose.connect(mongoPath);
-
 db = mongoose.connection;
 
 passport.serializeUser(function(user, done) {
@@ -52,14 +50,15 @@ passport.deserializeUser(function(user, done) {
 //error handling for the database
 //http://stackoverflow.com/questions/10873199/how-to-handle-mongoose-db-connection-interruptions
 db.on('error', function(err){
-	console.log("GOT ERROR EVENT");
+	console.log("Database error");
 	if(err){
 		db.db.close();
 		mongoose.connect(mongoPath);;
 	}
 });
 
-
+//setup the passport local strategy, a bulk of the login code is within the users schema
+//the username, password and done parameters are automatically passed in to the strategy
 passport.use(new LocalStrategy(
 	function(username, password, done) {
 		console.log("Attempting login");
@@ -67,7 +66,7 @@ passport.use(new LocalStrategy(
 	}
 ));
 
-
+//handle the login data
 app.post('/login',
   passport.authenticate('local', {
     successRedirect: '/loginSuccess',
@@ -80,8 +79,9 @@ app.get('/login', function(req, res) {
   res.sendFile('./public/login.html');
 });
 
-app.get('/', function (req, res) {
 
+
+app.get('/', function (req, res) {
 	res.send('Hello World!')
 })
 
@@ -100,10 +100,7 @@ app.get('/fetchUserInfo/:id', function(req,res){
 });
 
 app.get('/auth/stage1/:username/:randomDataFromClient', function(req,res){
-	// res.send("Hello ethan");
-	// console.log(req.body);
-	// console.log(req.params);
-	// res.json(req.params);
+
 	var username = req.params.username;
 	var randomDataFromClient 	= req.params.randomDataFromClient;
 	// console.log("Looking");
@@ -127,21 +124,6 @@ app.get('/auth/stage2/:username/:ourRandomData', function(req,res){
 		}
 		else{
 			res.send(result);
-		}
-	});
-});
-
-app.get('/test', function(req,res){
-	user.testKey();
-});
-
-app.get('/testDB', function(req,res){
-	user.dumpDB(function(err, result){
-		if(err){
-			res.send("Oh shit");
-		}
-		else{
-			res.json(result);
 		}
 	});
 });
