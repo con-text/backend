@@ -67,8 +67,23 @@ module.exports = {
 			}
 		});
 	},
-	getModel: function(){
-		// console.log("FETCHING MODEL");
-		return model;
+	attemptLogin: function(username, password, done){
+		user.findOne({ username: username }, function(err, result) {
+			if (err) {
+				return done(err);
+			}
+			if (!result) {
+				return done(null, false, { message: 'Incorrect username.' });
+			}
+			if (!result.password === password) {
+				return done(null, false, { message: 'Incorrect password.' });
+			}
+			return done(null, result);
+		});
+	},
+	getFromUID: function(uid, callback){
+		user.findOne({uuid: uid}, 'username profilePicUrl', function(err, result){
+
+		});
 	}
 };
