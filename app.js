@@ -2,22 +2,28 @@ var mongoose = require('mongoose');
 var express = require('express');
 var app = express();
 
+var path = require('path');
+
+var user = require('./schemas/users.js');
+var passport = require('passport'),
+	LocalStrategy = require('passport-local').Strategy;
+
 var crypto    = require('crypto');
-var hmac;
-var algorithm = 'sha1';
-var key       = 'abcdeg';
-var text      = 'I love cupcakes';
-var hash;
 
 // var keyHandler = require('./lib/handleKeys.js');
 
-var user = require('./schemas/users.js');
 
 mongoose.connect('mongodb://GaRwSRhDWopa:dyOKeHjSoBPc@mongosoup-cont002.mongosoup.de:31693/cc_GaRwSRhDWopa');
 
 db = mongoose.connection;
 
+passport.serializeUser(function(user, done) {
+  done(null, user);
+});
 
+passport.deserializeUser(function(user, done) {
+  done(null, user);
+});
 
 //error handling for the database
 //http://stackoverflow.com/questions/10873199/how-to-handle-mongoose-db-connection-interruptions
@@ -30,6 +36,36 @@ db.on('error', function(err){
 });
 
 
+passport.use(new LocalStrategy(
+	function(username, password, done) {
+		console.log("Attempting login");
+		user.getModel().findOne({ username: username }, function(err, result) {
+			if (err) {
+				return done(err);
+			}
+			if (!result) {
+				return done(null, false, { message: 'Incorrect username.' });
+			}
+			if (!result.password === password) {
+				return done(null, false, { message: 'Incorrect password.' });
+			}
+			return done(null, result);
+		});
+	}
+));
+
+
+app.post('/login', function(req,res,next)
+{
+	console.log(req);
+	next();
+}, 
+
+  passport.authenticate('local', { successRedirect: '/',
+                                   failureRedirect: '/login',
+                                   failureFlash: true })
+);
+
 
 
 app.get('/', function (req, res) {
@@ -37,15 +73,15 @@ app.get('/', function (req, res) {
 	res.send('Hello World!')
 })
 
-app.get('/auth/:username/:nonce', function(req,res){
+app.get('/auth/stage1/:username/:randomDataFromClient', function(req,res){
 	// res.send("Hello ethan");
 	// console.log(req.body);
 	// console.log(req.params);
 	// res.json(req.params);
 	var username = req.params.username;
-	var nonce = req.params.nonce;
-	console.log("Looking");
-	user.returnEncryptedNonceAlt(username, nonce, function(err,result){
+	var randomDataFromClient 	= req.params.randomDataFromClient;
+	// console.log("Looking");
+	user.returnEncryptedData(username, randomDataFromClient, function(err,result){
 		if(err){
 			res.send("null");
 		}
@@ -53,7 +89,21 @@ app.get('/auth/:username/:nonce', function(req,res){
 			res.send(result);
 		}
 	});
-})
+});
+
+app.get('/auth/stage2/:username/:ourRandomData', function(req,res){
+	var username = req.params.username;
+	var ourRandomData 	= req.params.ourRandomData;
+	console.log("Looking");
+	user.returnDecryptedData(username, ourRandomData, function(err,result){
+		if(err){
+			res.send("null");
+		}
+		else{
+			res.send(result);
+		}
+	});
+});
 
 app.get('/test', function(req,res){
 	user.testKey();
@@ -69,6 +119,9 @@ app.get('/testDB', function(req,res){
 		}
 	});
 });
+
+
+app.use(express.static(path.join(__dirname, 'public')));
 
 var server = app.listen(process.env.PORT || 3000, main);
 

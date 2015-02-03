@@ -1,7 +1,6 @@
 var mongoose = require('mongoose');
 var NodeRSA = require('node-rsa');
-var crypto    = require('crypto');
-
+var localCrypto = require('../lib/localCrypto.js');
 
 
 // var key = new NodeRSA("-----BEGIN PUBLIC KEY-----MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBANpNnHs2XxV5HwCfGtUAwhRZK+HdMibQ95rufTm1VlCyKIWkDRhVQzTBctqEl3RswPeEh37SqPsTrP2MFsI8RisCAwEAAQ==-----END PUBLIC KEY-----");
@@ -10,6 +9,7 @@ var key2 = new NodeRSA("-----BEGIN RSA PRIVATE KEY-----MIIBOwIBAAJBANpNnHs2XxV5H
 
 var schema = mongoose.Schema({
 	username: String,
+	password: String,
 	userKey: String,
 	serverKey: String
 });
@@ -17,68 +17,39 @@ var schema = mongoose.Schema({
 var model = mongoose.model("users", schema);
 
 module.exports = {
-	returnEncryptedNonce: function(username, nonce, cb){
-		console.log("Looooooking");
-		model.findOne({username: username}, function(err, result){
-			console.log("Got something back");
-			if(err || !result){
-				console.log("Err");
-				cb(err);
+	returnEncryptedData: function(username, randomDataFromClient, callback){
+		console.log("Looking for", username);
+		model.findOne({username: username}, function(err,data){
+			if(err){
+				console.log("error", err);
+				callback(err);
+			}
+			else if(!data){
+				console.log(username, "doesnt exist");
+				callback("User doesn't exist");
 			}
 			else{
-				var keyBack = "-----BEGIN PUBLIC KEY-----";
-					keyBack+= result.key;
-					keyBack+= "-----END PUBLIC KEY-----";
-				console.log(keyBack);
-				// console.log(result);
-				var key = new NodeRSA(keyBack);
-				// console.log(key.isPublic());
-				console.log(username);
-				console.log(nonce);
-
-				var encrypted = key.encrypt(nonce, 'base64');
-
-				console.log(key2.decrypt(encrypted, 'utf8'));
-				cb(null, encrypted);
-				// console.log(result);
+				console.log("fetching block");
+				var block = localCrypto.encryptData(data.serverKey, randomDataFromClient);
+				callback(null, block);
 			}
 		});
 	},
-	returnEncryptedNonceAlt: function(username, nonce, callback){
-		model.findOne({username: username}, function(err, result){
-			console.log("Got something back");
-			if(err || !result){
-				console.log("Err");
+	returnDecryptedData: function(username, ourRandomData, callback){
+		model.findOne({username: username}, function(err,data){
+			if(err){
+				console.log("error", err);
 				callback(err);
 			}
+			else if(!data){
+				console.log(username, "doesnt exist");
+				callback("User doesn't exist");
+			}
 			else{
-				
-				var algorithm = 'sha256';
-
-				var someTimestamp = '12345';
-				
-
-				console.log(algorithm, result.userKey);
-				console.log(algorithm, result.serverKey);
-
-				var hashedNonce = 		crypto.createHmac(algorithm, result.userKey);
-				var hashedServerAuth = 	crypto.createHmac(algorithm, result.serverKey);
-
-
-				// readout format:
-				hashedNonce.setEncoding('hex');
-				hashedServerAuth.setEncoding('hex');
-				//or also commonly: hmac.setEncoding('base64');
-
-				//wait for both hashes to complete
-				hashedNonce.end(nonce, function () {
-			    	hashedServerAuth.end(someTimestamp, function(){
-						callback(null, {hashedNonce: 		hashedNonce.read(),
-										hashedServerAuth: 	hashedServerAuth.read()});
-			    	});
-				});
-
-				// console.log(result);
+				console.log("fetching block");
+				console.log(data);
+				var block = localCrypto.decryptData(data.serverKey, ourRandomData);
+				callback(null, block);
 			}
 		});
 	},
@@ -95,5 +66,9 @@ module.exports = {
 				callback(null, result);
 			}
 		});
+	},
+	getModel: function(){
+		// console.log("FETCHING MODEL");
+		return model;
 	}
 };
