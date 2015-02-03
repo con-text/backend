@@ -83,7 +83,7 @@ app.get('/auth/stage1/:username/:randomDataFromClient', function(req,res){
 	// console.log("Looking");
 	user.returnEncryptedData(username, randomDataFromClient, function(err,result){
 		if(err){
-			res.send("null");
+			res.send(err);
 		}
 		else{
 			res.send(result);
@@ -97,7 +97,7 @@ app.get('/auth/stage2/:username/:ourRandomData', function(req,res){
 	console.log("Looking");
 	user.returnDecryptedData(username, ourRandomData, function(err,result){
 		if(err){
-			res.send("null");
+			res.send(err);
 		}
 		else{
 			res.send(result);
