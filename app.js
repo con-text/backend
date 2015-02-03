@@ -86,7 +86,7 @@ app.get('/', function (req, res) {
 })
 
 app.get('/fetchUserInfo/:id', function(req,res){
-	users.getFromUID(req.params.id, function(err, data){
+	user.getFromUID(req.params.id, function(err, data){
 		if(err){
 			res.json(err);
 		}

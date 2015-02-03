@@ -68,7 +68,7 @@ module.exports = {
 		});
 	},
 	attemptLogin: function(username, password, done){
-		user.findOne({ username: username }, function(err, result) {
+		model.findOne({ username: username }, function(err, result) {
 			if (err) {
 				return done(err);
 			}
@@ -82,8 +82,8 @@ module.exports = {
 		});
 	},
 	getFromUID: function(uid, callback){
-		user.findOne({uuid: uid}, 'username profilePicUrl', function(err, result){
-
+		model.findOne({uuid: uid}, 'username profilePicUrl', function(err, result){
+			callback(err,result);
 		});
 	}
 };
