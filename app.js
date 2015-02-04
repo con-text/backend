@@ -18,7 +18,14 @@ var passport = require('passport'),
 
 var mongoPath = 'mongodb://GaRwSRhDWopa:dyOKeHjSoBPc@mongosoup-cont002.mongosoup.de:31693/cc_GaRwSRhDWopa';
 
+//allow CORS
+app.use(function(req, res, next) {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
+    res.header('Access-Control-Allow-Headers', 'Content-Type');
 
+    next();
+})
 
 app.use(cookieParser());
 app.use(methodOverride());
@@ -128,15 +135,6 @@ app.get('/auth/stage2/:username/:ourRandomData', function(req,res){
 	});
 });
 
-
-//allow CORS
-app.use(function(req, res, next) {
-    res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
-    res.header('Access-Control-Allow-Headers', 'Content-Type');
-
-    next();
-})
 
 // app.use(express.static(path.join(__dirname, 'public')));
 
