@@ -1,12 +1,13 @@
 var mongoose = require('mongoose');
-var NodeRSA = require('node-rsa');
 var localCrypto = require('../lib/localCrypto.js');
 
 var schema = mongoose.Schema({
 	username: String,
 	password: String,
 	userKey: String,
-	serverKey: String
+	serverKey: String,
+	profilePicUrl: String,
+	uuid: String
 });
 
 var model = mongoose.model("users", schema);
@@ -64,7 +65,15 @@ module.exports = {
 	},
 	getFromUID: function(uid, callback){
 		model.findOne({uuid: uid}, 'username profilePicUrl', function(err, result){
-			callback(err,result);
+			if(err){
+				callback(err);
+			}
+			else if(!result){
+				callback("Invalid uid");
+			}
+			else{
+				callback(null,result);
+			}
 		});
 	}
 };

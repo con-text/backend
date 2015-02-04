@@ -7,18 +7,13 @@
   "description": "",
   "main": "app.js",
   "dependencies": {
-    "express": "^4.11.1",
-    "mongoose": "^3.8.22",
-    "node-cryptojs-aes": "^0.4.0",
-    "node-rsa": "^0.2.13",
-    "passport": "^0.2.1",
-    "passport-local": "^1.0.0",
-    "ejs": "*",
-    "cookie-parser": "~1.0.1",
     "body-parser": "~1.10.0",
-    "method-override": "*",
+    "cookie-parser": "~1.0.1",
+    "ejs": "*",
+    "express": "^4.11.1",
     "express-session": "*",
-    "connect-flash": "*"
+    "method-override": "*",
+    "mongoose": "^3.8.22"
   },
   "devDependencies": {},
   "scripts": {
