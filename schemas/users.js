@@ -1,4 +1,4 @@
-
+'use strict';
 
 var mongoose = require('mongoose');
 var localCrypto = require('../lib/localCrypto.js');
@@ -61,20 +61,6 @@ module.exports = {
 				var block = localCrypto.decryptData(data.serverKey, ourRandomData);
 				callback(null, block);
 			}
-		});
-	},
-	attemptLogin: function(username, password, done){
-		model.findOne({ username: username }, function(err, result) {
-			if (err) {
-				return done(err);
-			}
-			if (!result) {
-				return done(null, false, { message: 'Incorrect username.' });
-			}
-			if (!result.password === password) {
-				return done(null, false, { message: 'Incorrect password.' });
-			}
-			return done(null, result);
 		});
 	},
 	getFromUID: function(req,res){

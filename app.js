@@ -1,3 +1,4 @@
+'use strict';
 //a global replacement for console.log, disableLog will turn off all outputs
 global.enableLogging = true;
 global.debug = function(){
@@ -11,12 +12,12 @@ var mongoose = require('mongoose'),
 	express = require('express'),
 	app = express();
 
-var	util	 		= require('util'),
-	bodyParser 		= require('body-parser'),
-	cookieParser 	= require('cookie-parser'),
-	session 		= require('express-session'),
-	methodOverride 	= require('method-override'),
-	path 			= require('path');
+// var	util	 		= require('util');
+// var	bodyParser 		= require('body-parser'),
+var	cookieParser 	= require('cookie-parser');
+var	session 		= require('express-session');
+var	methodOverride 	= require('method-override');
+// var path 			= require('path');
 
 var user = require('./schemas/users.js');
 var authScheme = require('./lib/authScheme.js');
@@ -44,14 +45,14 @@ db.on('error', function(err){
 	console.log("Database error");
 	if(err){
 		db.db.close();
-		mongoose.connect(mongoPath);;
+		mongoose.connect(mongoPath);
 	}
 });
 
 
 app.get('/', function (req, res) {
-	res.send('Hello World!')
-})
+	res.send('Hello World!');
+});
 
 
 //The code that the front end uses in the login page to get the profile picture
@@ -78,14 +79,14 @@ app.get('/auth/stage2/:uuid/:ourRandomData', authScheme.stage2);
 var server = app.listen(process.env.PORT || 3000, main);
 
 app.disableLog = function(){
-	enableLogging = false;
-}
+	global.enableLogging = false;
+};
 
 function main(){
 	var host = server.address().address;
 	var port = server.address().port;
 
-	console.log('Example app listening at http://%s:%s', host, port)
+	console.log('Example app listening at http://%s:%s', host, port);
 }
 
 module.exports = app;
