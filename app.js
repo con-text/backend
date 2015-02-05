@@ -1,7 +1,16 @@
-var mongoose = require('mongoose');
-var express = require('express');
-var app = express();
-	
+//a global replacement for console.log, disableLog will turn off all outputs
+global.enableLogging = true;
+global.debug = function(){
+
+	if(enableLogging){
+		console.log.apply(this,arguments);
+	}
+};
+
+var mongoose = require('mongoose'),
+	express = require('express'),
+	app = express();
+
 var	util	 		= require('util'),
 	bodyParser 		= require('body-parser'),
 	cookieParser 	= require('cookie-parser'),
@@ -27,7 +36,7 @@ app.use(session({
 
 
 mongoose.connect(mongoPath);
-db = mongoose.connection;
+var db = mongoose.connection;
 
 //error handling for the database
 //http://stackoverflow.com/questions/10873199/how-to-handle-mongoose-db-connection-interruptions
@@ -47,16 +56,7 @@ app.get('/', function (req, res) {
 
 //The code that the front end uses in the login page to get the profile picture
 //from a uuid
-app.get('/fetchUserInfo/:id', function(req,res){
-	user.getFromUID(req.params.id, function(err, data){
-		if(err){
-			res.json(err);
-		}
-		else{
-			res.json(data);
-		}
-	});
-});
+app.get('/users/:id', user.getFromUID);
 
 
 
@@ -77,10 +77,16 @@ app.get('/auth/stage2/:uuid/:ourRandomData', authScheme.stage2);
 
 var server = app.listen(process.env.PORT || 3000, main);
 
+app.disableLog = function(){
+	enableLogging = false;
+}
+
 function main(){
 	var host = server.address().address;
 	var port = server.address().port;
 
 	console.log('Example app listening at http://%s:%s', host, port)
 }
+
+module.exports = app;
 

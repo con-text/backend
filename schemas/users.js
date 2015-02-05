@@ -1,3 +1,5 @@
+
+
 var mongoose = require('mongoose');
 var localCrypto = require('../lib/localCrypto.js');
 
@@ -14,36 +16,48 @@ var model = mongoose.model("users", schema);
 
 module.exports = {
 	returnEncryptedData: function(username, randomDataFromClient, callback){
-		console.log("Looking for", username);
+		debug("Looking for", username);
+
+		if(randomDataFromClient.length !== 32){
+			callback("Invalid data length");
+			return;
+		}
+
 		model.findOne({uuid: username}, function(err,data){
 			if(err){
-				console.log("error", err);
+				debug("error", err);
 				callback(err);
 			}
 			else if(!data){
-				console.log(username, "doesnt exist");
+				debug(username, "doesnt exist");
 				callback("User doesn't exist");
 			}
 			else{
-				console.log("fetching block");
+				debug("fetching block");
 				var block = localCrypto.encryptData(data.serverKey, randomDataFromClient);
 				callback(null, block);
 			}
 		});
 	},
 	returnDecryptedData: function(username, ourRandomData, callback){
+
+		if(ourRandomData.length !== 32){
+			callback("Invalid data length");
+			return;
+		}
+
 		model.findOne({uuid: username}, function(err,data){
 			if(err){
-				console.log("error", err);
+				debug("error", err);
 				callback(err);
 			}
 			else if(!data){
-				console.log(username, "doesnt exist");
+				debug(username, "doesnt exist");
 				callback("User doesn't exist");
 			}
 			else{
-				console.log("fetching block");
-				console.log(data);
+				debug("fetching block");
+				debug(data);
 				var block = localCrypto.decryptData(data.serverKey, ourRandomData);
 				callback(null, block);
 			}
@@ -63,16 +77,17 @@ module.exports = {
 			return done(null, result);
 		});
 	},
-	getFromUID: function(uid, callback){
-		model.findOne({uuid: uid}, 'username profilePicUrl', function(err, result){
+	getFromUID: function(req,res){
+		model.findOne({uuid: req.params.id}, 'username profilePicUrl', function(err, result){
 			if(err){
-				callback(err);
+				debug(err);
+				res.status(500).json({message: "An error has occured"});
 			}
 			else if(!result){
-				callback("Invalid uid");
+				res.status(404).json({message:"Invalid UUID"});
 			}
 			else{
-				callback(null,result);
+				res.json({message: result});
 			}
 		});
 	}
