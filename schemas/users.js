@@ -5,7 +5,7 @@ var localCrypto = require('../lib/localCrypto.js');
 var hex = require('../lib/hex.js');
 
 var schema = mongoose.Schema({
-	username: String,
+	name: String,
 	password: String,
 	userKey: String,
 	serverKey: String,
@@ -75,7 +75,7 @@ module.exports = {
 		});
 	},
 	getFromUID: function(req,res){
-		model.findOne({uuid: req.params.id}, 'username profilePicUrl', function(err, result){
+		model.findOne({uuid: req.params.id}, 'name profilePicUrl', function(err, result){
 			if(err){
 				debug(err);
 				res.status(500).json({message: "An error has occured"});
