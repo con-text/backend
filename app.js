@@ -12,29 +12,23 @@ var mongoose = require('mongoose'),
 	express = require('express'),
 	app = express();
 
-// var	util	 		= require('util');
-// var	bodyParser 		= require('body-parser'),
-var	cookieParser 	= require('cookie-parser');
-var	session 		= require('express-session');
-var	methodOverride 	= require('method-override');
-// var path 			= require('path');
-
 var user = require('./schemas/users.js');
 var authScheme = require('./lib/authScheme.js');
+var fs = require('fs');
+
+var mongoPath = "";
 
 
-var mongoPath = 'mongodb://GaRwSRhDWopa:dyOKeHjSoBPc@mongosoup-cont002.mongosoup.de:31693/cc_GaRwSRhDWopa';
-
-
-app.use(cookieParser());
-app.use(methodOverride());
-app.use(session({ 
-	secret: 'jidfso8fmsf[]-==--@', 
-	cookie: {httpOnly: true},
-	resave: false,
-	saveUninitialized: false
-}));
-
+//this is for logging into the db. I'm reluctant to set ENV VARS when developing
+//locally as the gulpfile is public, and it would be a pain to add them manually
+//every time. 
+try{
+	mongoPath = fs.readFileSync('mongologin.txt');
+}
+catch(e){
+	//the file doesn't exist, try the env var
+	mongoPath = process.env.MONGOLOGIN;
+}
 
 mongoose.connect(mongoPath);
 var db = mongoose.connection;
