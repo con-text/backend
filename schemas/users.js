@@ -2,6 +2,7 @@
 
 var mongoose = require('mongoose');
 var localCrypto = require('../lib/localCrypto.js');
+var hex = require('../lib/hex.js');
 
 var schema = mongoose.Schema({
 	username: String,
@@ -20,6 +21,11 @@ module.exports = {
 
 		if(randomDataFromClient.length !== 32){
 			callback("Invalid data length");
+			return;
+		}
+
+		if(!hex.isValidHex(randomDataFromClient)){
+			callback("Invalid data type");
 			return;
 		}
 
@@ -43,6 +49,11 @@ module.exports = {
 
 		if(ourRandomData.length !== 32){
 			callback("Invalid data length");
+			return;
+		}
+
+		if(!hex.isValidHex(ourRandomData)){
+			callback("Invalid data type");
 			return;
 		}
 

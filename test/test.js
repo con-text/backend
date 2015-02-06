@@ -104,6 +104,30 @@ describe('Crypto', function(){
 			done();
 		});
 	});
+
+	it('Should reject invalid data for stage1', function(done){
+		request(app)
+		.get('/auth/stage1/tester/5d41402abc4b2a76b9719d911017c59G')
+		.end(function(err,res){
+			var result = JSON.parse(res.text);
+			assert.equal(err,null);
+			assert.equal(result.message, "Invalid data type");
+			assert.equal(res.status, 400);
+			done();
+		});
+	});
+
+	it('Should reject invalid data for stage2', function(done){
+		request(app)
+		.get('/auth/stage2/tester/5d41402abc4b2a76b9719d911017c59G')
+		.end(function(err,res){
+			var result = JSON.parse(res.text);
+			assert.equal(err,null);
+			assert.equal(result.message, "Invalid data type");
+			assert.equal(res.status, 400);
+			done();
+		});
+	});
 });
 
 describe("User functions", function(){
