@@ -1,5 +1,7 @@
 'use strict';
-//a global replacement for console.log, disableLog will turn off all outputs
+//a global replacement for console.log, disabling enableLogging will turn off all outputs
+//taken from this SO post
+//http://stackoverflow.com/questions/1215392/how-to-quickly-and-conveniently-disable-all-console-log-statements-in-my-code
 global.enableLogging = true;
 global.debug = function(){
 
