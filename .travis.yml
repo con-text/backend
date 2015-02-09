@@ -1,5 +1,10 @@
 language: node_js
 node_js:
-  - "0.10"
+- '0.10'
 env:
-  - secure: "aO5gYt7mZzkmc5l4q3nsbhFh9UcFaiaxBzhDMxo4M2Vd33ydd+ID4nOcxDqTeoXsB2sBrJMbVdmFikeAfUARY8PEXkIyIQZMhI84kAq4wtUEEHzfPCRCTM3QPOogIAjdOu8hwEBg//7x1Lk8Dof9bXwsPSkUHWa8lgl9Bdi89iw="
+- secure: aO5gYt7mZzkmc5l4q3nsbhFh9UcFaiaxBzhDMxo4M2Vd33ydd+ID4nOcxDqTeoXsB2sBrJMbVdmFikeAfUARY8PEXkIyIQZMhI84kAq4wtUEEHzfPCRCTM3QPOogIAjdOu8hwEBg//7x1Lk8Dof9bXwsPSkUHWa8lgl9Bdi89iw=
+deploy:
+  app: contexte
+  provider: heroku
+  api_key:
+    secure: CClr3Zl/CpGOZd1ZH9OvudKpS/L7mgLmNH/oHJ2o0gqAxLCZU7eCMtoFI+a19gXUs179rqrGmtz4X1rQJEjNw238HRDMsVp6F1WjvqVGqjP5QnUw98lQWuooTvweFsTBD/cKrMVP0pVIIwTrCOD4ydJAu857rJuWJ2khnK1tbEs=
