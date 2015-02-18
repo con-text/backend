@@ -165,7 +165,77 @@ describe("Root path", function(){
 			done();
 		})
 	})
-})
+});
+
+
+describe("App States", function(){
+	var testUUID = "tester";
+	var testAppId = "1234567890101";
+	var testState = {state:{"Something":"Cool"}};
+	it("Should be able to create a test state", function(done){
+		request(app)
+		.post('/app/syncState/'+ testUUID +'/'+ testAppId +'/create').send( testState )
+		.end(function(err,res){
+			var result = JSON.parse(res.text);
+			assert.equal(result.message, "Created");
+			done();
+		});
+	});
+
+	it("Shouldn't be able to create two of the same states", function(done){
+		request(app)
+		.post('/app/syncState/'+ testUUID +'/'+ testAppId +'/create').send( testState )
+		.end(function(err,res){
+			// console.log(err,res);
+			var result = JSON.parse(res.text);
+			assert.equal(result.message, "State already exists");
+			done();
+		});
+	});
+
+	it("Should be able to get the state", function(done){
+		request(app)
+		.get('/app/syncState/'+ testUUID +'/'+ testAppId )
+		.end(function(err,res){
+			var result = JSON.parse(res.text);
+			assert.equal(result.message.uuid, testUUID);
+			assert.equal(result.message.appId, testAppId);
+			assert.equal(result.message.state.Something, testState.state.Something);
+			done();
+		});
+	});
+
+	it("Should be able to push some state", function(done){
+		request(app)
+		.post('/app/syncState/'+ testUUID +'/'+ testAppId).send({state: {Something: "Something else"}})
+		.end(function(err,res){
+			var result = JSON.parse(res.text);
+			assert.equal(result.message, true);
+			done();
+		});
+	})
+
+	it("Should be able to delete the state", function(done){
+		request(app)
+		.get('/app/syncState/'+ testUUID +'/'+ testAppId +'/remove')
+		.end(function(err,res){
+			// console.log(res);
+			var result = JSON.parse(res.text);
+			assert.equal(result.message, "Done");
+			done();
+		});
+	});
+
+	it("Shouldn't be able to delete an invalid combination", function(done){
+		request(app)
+		.get('/app/syncState/'+ testUUID +'/'+ testAppId +'/remove')
+		.end(function(err,res){
+			var result = JSON.parse(res.text);
+			assert.equal(result.message, "Invalid combination");
+			done();
+		});
+	})
+});
 // describe("REST", function(){
 // 	it('Should return uniform ')
 // });

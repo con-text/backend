@@ -32,6 +32,14 @@ gulp.task('develop', function () {
     })
 })
 
+gulp.task('dev-nolint', function(){
+    nodemon({ script: 'app.js', ignore:['test/test.js', 'gulpfile.js']})
+    // .on('change', ['lint'])
+    .on('restart', function () {
+      console.log('restarted!')
+    })
+})
+
 gulp.task('default', function() {
   // place code for your default task here
 });

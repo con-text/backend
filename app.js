@@ -16,7 +16,15 @@ var mongoose = require('mongoose'),
 
 var user = require('./schemas/users.js');
 var authScheme = require('./lib/authScheme.js');
+var syncState = require('./lib/syncState.js');
 var fs = require('fs');
+
+var bodyParser = require('body-parser');
+
+app.use(bodyParser.urlencoded({ extended: false }));
+
+// parse application/json
+app.use(bodyParser.json());
 
 var mongoPath = "";
 
@@ -69,6 +77,16 @@ app.get('/auth/stage1/:uuid/:randomDataFromClient', authScheme.stage1);
 //the keys locally
 app.get('/auth/stage2/:uuid/:ourRandomData', authScheme.stage2);
 
+//Deal with states being pushed, bringing the server into sync
+app.post('/app/syncState/:uuid/:appId', syncState.post);
+
+//Provide the data to bring the app into sync
+app.get('/app/syncState/:uuid/:appId', syncState.get);
+
+//these are mostly for testing purposes, may move them to only be accessible when testing
+//The superagent framework doesn't allow for CREATE or DELETE headers, hence the shitty routes
+app.post('/app/syncState/:uuid/:appId/create', syncState.create);
+app.get('/app/syncState/:uuid/:appId/remove', syncState.remove);
 
 // app.use(express.static(path.join(__dirname, 'public')));
 
