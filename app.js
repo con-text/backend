@@ -46,7 +46,7 @@ var db = mongoose.connection;
 //error handling for the database
 //http://stackoverflow.com/questions/10873199/how-to-handle-mongoose-db-connection-interruptions
 db.on('error', function(err){
-	console.log("Database error");
+	console.log("Database error", err);
 	if(err){
 		db.db.close();
 		mongoose.connect(mongoPath);
