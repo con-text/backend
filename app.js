@@ -17,6 +17,7 @@ var mongoose = require('mongoose'),
 var user = require('./schemas/users.js');
 var authScheme = require('./lib/authScheme.js');
 var syncState = require('./lib/syncState.js');
+var cryptoTest = require('./lib/cryptoTest.js');
 var fs = require('fs');
 
 var bodyParser = require('body-parser');
@@ -87,6 +88,10 @@ app.get('/app/syncState/:uuid/:appId', syncState.get);
 //The superagent framework doesn't allow for CREATE or DELETE headers, hence the shitty routes
 app.post('/app/syncState/:uuid/:appId/create', syncState.create);
 app.get('/app/syncState/:uuid/:appId/remove', syncState.remove);
+
+
+app.get('/testRoute/enc/:plaintext/:key', cryptoTest.enc);
+app.get('/testRoute/dec/:ciphertext/:mac/:key', cryptoTest.dec);
 
 // app.use(express.static(path.join(__dirname, 'public')));
 

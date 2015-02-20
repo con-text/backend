@@ -53,7 +53,7 @@ module.exports = {
 	//client key, which will then be compared to what we receive from the wearable.
 	returnDecryptedData: function(username, ourRandomData, callback){
 
-		if(ourRandomData.length !== 32){
+		if(ourRandomData.length !== 64){
 			callback("Invalid data length");
 			return;
 		}
@@ -62,6 +62,8 @@ module.exports = {
 			callback("Invalid data type");
 			return;
 		}
+
+
 
 		model.findOne({uuid: username}, function(err,data){
 			if(err){
