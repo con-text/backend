@@ -17,6 +17,7 @@ var mongoose = require('mongoose'),
 var user = require('./schemas/users.js');
 var authScheme = require('./lib/authScheme.js');
 var syncState = require('./lib/syncState.js');
+var syncStateSocket = require('./lib/syncStateSocket.js');
 var cryptoTest = require('./lib/cryptoTest.js');
 var fs = require('fs');
 
@@ -96,6 +97,35 @@ app.get('/testRoute/dec/:ciphertext/:mac/:key', cryptoTest.dec);
 // app.use(express.static(path.join(__dirname, 'public')));
 
 var server = app.listen(process.env.PORT || 3000, main);
+
+// var io = require('socket.io')(server);
+// //need to define something using 
+// io.on('connection', function(socket){
+// 	console.log('a user connected to the socket server');
+// 	socket.on('stateChange', function(msg){
+// 		console.log("Got", msg, "from user");
+// 	});
+
+// 	socket.on('getInitialFromBackend', function(msg){
+// 		console.log('getInitialFromBackend', msg);
+// 		syncStateSocket.get(msg.uuid, msg.appId, function(success, message){
+// 			if(success){
+// 				socket.emit('gotInitialFromBackend', message);
+// 			}
+// 			else{
+// 				socket.emit('gotInitialFromBackend', false);
+// 			}
+// 		});
+// 	});
+
+// 	socket.on('stateChange', function(msg){
+// 		console.log("Got statechange",msg,"from socketClient");
+// 		//the state needs to be synced with the backend here
+// 		syncStateSocket.post(msg.uuid, msg.appId, msg.state, function(success, message){
+// 			socket.emit('syncedState', {success: success, message: message});
+// 		});
+// 	});
+// });
 
 app.disableLog = function(){
 	global.enableLogging = false;

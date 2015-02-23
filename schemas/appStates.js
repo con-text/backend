@@ -4,11 +4,12 @@ var mongoose = require('mongoose');
 
 var schema = mongoose.Schema({
 	state: Object,
+	currentObject: String,
 	appId: String,
 	uuid: String
 });
 
-var model = mongoose.model("states", schema);
+var model = mongoose.model("appStates", schema);
 
 module.exports = {
 	createState: function(uuid, appId, state, callback){
@@ -66,6 +67,7 @@ module.exports = {
 			console.log("Parsed state to be", state);
 		}
 		this.getState(uuid, appId, function(err, result){
+			console.log("poststate", err,result);
 			result.state = state;
 			result.save(function(err){
 				if(err){

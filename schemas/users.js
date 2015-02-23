@@ -83,7 +83,7 @@ module.exports = {
 		});
 	},
 	getFromUID: function(req,res){
-		model.findOne({uuid: req.params.id}, 'name profilePicUrl', function(err, result){
+		model.findOne({uuid: req.params.id}, 'name profilePicUrl uuid', function(err, result){
 			if(err){
 				debug(err);
 				res.status(500).json({message: "An error has occured"});
