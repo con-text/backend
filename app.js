@@ -18,6 +18,7 @@ var user = require('./schemas/users.js');
 var authScheme = require('./lib/authScheme.js');
 var syncState = require('./lib/syncState.js');
 var syncStateSocket = require('./lib/syncStateSocket.js');
+var objectRoutes = require('./lib/objectRoutes.js');
 var cryptoTest = require('./lib/cryptoTest.js');
 var fs = require('fs');
 
@@ -50,8 +51,11 @@ var db = mongoose.connection;
 db.on('error', function(err){
 	console.log("Database error");
 	if(err){
-		db.db.close();
-		mongoose.connect(mongoPath);
+		setTimeout(function(){
+			console.log("Attempting to reconnect");
+			db.db.close();
+			mongoose.connect(mongoPath);
+		}, 1000);
 	}
 });
 
@@ -87,9 +91,11 @@ app.get('/app/syncState/:uuid/:appId', syncState.get);
 
 //these are mostly for testing purposes, may move them to only be accessible when testing
 //The superagent framework doesn't allow for CREATE or DELETE headers, hence the shitty routes
+//this is going to be superceded by sockets
 app.post('/app/syncState/:uuid/:appId/create', syncState.create);
 app.get('/app/syncState/:uuid/:appId/remove', syncState.remove);
 
+app.get('/objects/:uuid/:objectId', objectRoutes.get);
 
 app.get('/testRoute/enc/:plaintext/:key', cryptoTest.enc);
 app.get('/testRoute/dec/:ciphertext/:mac/:key', cryptoTest.dec);
@@ -98,34 +104,41 @@ app.get('/testRoute/dec/:ciphertext/:mac/:key', cryptoTest.dec);
 
 var server = app.listen(process.env.PORT || 3000, main);
 
-// var io = require('socket.io')(server);
-// //need to define something using 
-// io.on('connection', function(socket){
-// 	console.log('a user connected to the socket server');
-// 	socket.on('stateChange', function(msg){
-// 		console.log("Got", msg, "from user");
-// 	});
+var io = require('socket.io')(server);
 
-// 	socket.on('getInitialFromBackend', function(msg){
-// 		console.log('getInitialFromBackend', msg);
-// 		syncStateSocket.get(msg.uuid, msg.appId, function(success, message){
-// 			if(success){
-// 				socket.emit('gotInitialFromBackend', message);
-// 			}
-// 			else{
-// 				socket.emit('gotInitialFromBackend', false);
-// 			}
-// 		});
-// 	});
+//need to define something using 
+io.on('connection', function(socket){
+	console.log('a user connected to the socket server');
 
-// 	socket.on('stateChange', function(msg){
-// 		console.log("Got statechange",msg,"from socketClient");
-// 		//the state needs to be synced with the backend here
-// 		syncStateSocket.post(msg.uuid, msg.appId, msg.state, function(success, message){
-// 			socket.emit('syncedState', {success: success, message: message});
-// 		});
-// 	});
-// });
+
+	socket.on('getInitialFromBackend', function(msg){
+		console.log('getInitialFromBackend', msg);
+		syncStateSocket.get(msg.uuid, msg.objectId, function(success, message){
+			if(success){
+				console.log("Joining room", msg.objectId);
+				socket.join(msg.objectId);
+				// message.socketId = msg.socketId;
+				var newPacket = {state: message.state, _id: message._id, appId: message.appId,
+								owner: message.owner, collaborators: message.collaborators, socketId: msg.socketId};
+				console.log("Sending",newPacket);
+				socket.emit('gotInitialFromBackend', newPacket);
+			}
+			else{
+				socket.emit('gotInitialFromBackend', false);
+			}
+		});
+	});
+
+	socket.on('stateChange', function(msg){
+		console.log("Got statechange",msg,"from socketClient");
+		//the state needs to be synced with the backend here
+		syncStateSocket.post(msg.uuid, msg.objectId, msg.state, function(success, message){
+			socket.emit('syncedState', {success: success, message: message});
+		});
+	});
+
+
+});
 
 app.disableLog = function(){
 	global.enableLogging = false;
