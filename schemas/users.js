@@ -43,7 +43,7 @@ module.exports = {
 				callback("User doesn't exist");
 			}
 			else{
-				debug("fetching block");
+				// debug("fetching block");
 				var block = localCrypto.encryptData(data.serverKey, randomDataFromClient);
 				callback(null, block);
 			}
@@ -75,8 +75,8 @@ module.exports = {
 				callback("User doesn't exist");
 			}
 			else{
-				debug("fetching block");
-				debug(data);
+				// debug("fetching block");
+				// debug(data);
 				var block = localCrypto.decryptData(data.serverKey, ourRandomData);
 				callback(null, block);
 			}
