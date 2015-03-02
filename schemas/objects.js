@@ -11,6 +11,47 @@ var schema = mongoose.Schema({
 
 var model = mongoose.model("objects", schema);
 
+var updateValueFromArray = function(obj,arr,prop,value){
+	console.log("UPDATING VALUES");
+	//loop through until we're at the right object
+	for(var i = 0; i<arr.length; i++){
+		obj = obj[arr[i]];
+		if(obj === undefined){
+			return false;
+		}
+	}
+	obj[prop] = value;
+	return obj;
+}
+
+var deleteValueFromArray = function(obj,arr,prop){
+	for(var i = 0; i<arr.length; i++){
+		obj = obj[arr[i]];
+		if(obj === undefined){
+			return false;
+		}
+	}
+	//set the value and discard the changes
+	delete obj[prop]
+	return obj;
+}
+
+var dealWithChange = function(obj, changeInfo){
+	console.log(obj);
+	console.log(changeInfo);
+	switch(changeInfo.action){
+		case "added":
+		case "changed":
+			return updateValueFromArray(obj, changeInfo.path, changeInfo.property, changeInfo.value);
+		break;
+		case "removed":
+			return deleteValueFromArray(obj, changeInfo.path, changeInfo.property);
+		break;
+	}
+	return false;
+}
+
+
 module.exports = {
 	getState: function(uuid, objectId, callback){
 		uuid = uuid.toLowerCase();
@@ -47,17 +88,26 @@ module.exports = {
 			}
 		});
 	},
-	updateState: function(uuid, objectId, state, callback){
+	updateState: function(uuid, objectId, changeInfo, callback){
 		this.getState(uuid, objectId, function(success, result){
 			if(!success){
 				console.log("State doesn't exist", result);
 				callback(false, result);
 			}
 			else{
-				console.log()
-				result.state = state;
-				result.save(function(err){
-					console.log("Saving state");
+				if(!result.state)
+					result.state = {};
+				dealWithChange(result.state, changeInfo);
+				if(!result.state){
+					console.log("CHANGE DIDNT WORK");
+				}
+				var pathInfo = changeInfo.path.join(".");
+				if(pathInfo.length !== 0){
+					pathInfo+=".";
+				}
+				result.markModified("state."+changeInfo.path.join(".")+changeInfo.property);
+				result.save(function(err, gotback, nt){
+					// console.log("Saving state", err);
 					if(err){
 						callback(false, err);
 					}

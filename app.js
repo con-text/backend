@@ -132,8 +132,10 @@ io.on('connection', function(socket){
 	socket.on('stateChange', function(msg){
 		console.log("Got statechange",msg,"from socketClient");
 		//the state needs to be synced with the backend here
-		syncStateSocket.post(msg.uuid, msg.objectId, msg.state, function(success, message){
-			socket.emit('syncedState', {success: success, message: message});
+		syncStateSocket.post(msg.uuid, msg.objectId, msg, function(error, message){
+			console.log("Sending syncedState");
+			socket.emit('syncedState', {socketId: msg.socketId, action: msg.action, path: msg.path, property: msg.property,
+						value: msg.value, objectId: msg.objectId});
 		});
 	});
 
