@@ -2,6 +2,7 @@
 
 var mongoose = require('mongoose');
 var localCrypto = require('../lib/localCrypto.js');
+var objectsSchema = require('../schemas/objects.js');
 var hex = require('../lib/hex.js');
 
 var schema = mongoose.Schema({
@@ -10,7 +11,8 @@ var schema = mongoose.Schema({
 	userKey: String,
 	serverKey: String,
 	profilePicUrl: String,
-	uuid: String
+	uuid: String,
+	apps: Array
 });
 
 var model = mongoose.model("users", schema);
@@ -93,6 +95,202 @@ module.exports = {
 			}
 			else{
 				res.json({message: result});
+			}
+		});
+	},
+	getAppStates: function(req,res){
+		model.findOne({uuid: req.params.id}, 'name profilePicUrl uuid apps', function(err, result){
+			if(err){
+				debug(err);
+				res.status(500).json({message: "An error has occured"});
+			}
+			else if(!result){
+				res.status(404).json({message:"Invalid UUID"});
+			}
+			else{
+				//should have a list of apps and states now, lets crawl through and grab the list of object ids
+
+				var objects = [];
+				var keyToIdx = {};
+				console.log(result);
+				if(!result.apps || result.apps.length === 0){
+					console.log("Found no apps");
+					res.json({message: result});
+					return;
+				}
+
+				//Loop through every app, there'll be a state property that's an array full of object ids
+				//push that to the array to look up, and keep track of the indices
+				result.apps.forEach(function(app, i){
+					app.states.forEach(function(state, j) {
+						objects.push(state.id);
+						keyToIdx[state.id] = {i: i, j:j};
+					});
+				});
+
+				objectsSchema.getObjects(objects, function(err,docs){
+					docs.forEach(function(doc){
+						
+						//update the value from result with the fetched document
+						var mapping = keyToIdx[doc._id];
+						result.apps[mapping.i].states[mapping.j] = doc;
+					});
+					res.json({message: result});
+				});
+			}
+		});
+	},
+	getApp: function(req,res){
+		model.findOne({uuid: req.params.id}, 'uuid apps', function(err,result){
+			if(err){
+				debug(err);
+				res.status(500).json({message: "An error has occured"});
+			}
+			else if(!result){
+				res.status(404).json({message:"Invalid UUID"});
+			}
+			else{
+				//all exists ok
+
+				if(!result.apps || result.apps.length === 0){
+					res.status(404).json({message: "App id doesn't exist in the user's state thing"});
+					return;
+				}
+
+				var returnApp = null;
+
+				result.apps.forEach(function(app){
+					if(app.id === req.params.appId){
+						returnApp = app;
+					}
+				});
+
+				if(!returnApp){
+					res.status(404).json({message: "App id doesn't exist in the user's state thing"});
+					return;
+				}
+
+				objectsSchema.getObjects(returnApp.states, function(err,docs){
+					res.json(docs);
+				})
+			}
+		});
+	},
+	//are we going to do this based on changes?
+	postApp: function(req,res){
+		//add a new app to the states
+		model.findOne({uuid: req.params.id}, 'uuid apps', function(err,result){
+			if(err){
+				debug(err);
+				res.status(500).json({message: "An error has occured"});
+			}
+			else if(!result){
+				res.status(404).json({message:"Invalid UUID"});
+			}
+			else{
+				var found = false;
+				if(!result.apps || result.apps.length === 0){
+					//this is completely fine, add no problem
+					result.apps = [{id: req.params.appId, states: []}];
+				}
+				else{
+					result.apps.forEach(function(app){
+						if(app.id === req.params.appID){
+							found = true;
+						}
+					});
+					if(!found){
+						//add it in and return the object
+						result.apps.push({id: req.params.appId, states: []});
+					}
+				}
+				if(found){
+					//throw error
+					res.status(409).json({message: "App already exists for this user"});
+				}
+				else{
+					result.save(function(err){
+						if(err){
+							console.log(err);
+						}
+						else{
+							res.json({message: result});
+						}
+					});
+				}
+			}
+		});
+	},
+	deleteApp: function(req,res){
+		model.findOne({uuid: req.params.id}, 'uuid apps', function(err,result){
+			if(err){
+				debug(err);
+				res.status(500).json({message: "An error has occured"});
+			}
+			else if(!result){
+				res.status(404).json({message:"Invalid UUID"});
+			}
+			else{
+				if(!result.apps || result.apps.length === 0){
+					res.json({message: "Deleted"});
+				}
+				else{
+					var found = false;
+					result.apps.forEach(function(app,idx){
+						if(app.id === req.params.appID){
+							found = idx;
+						}
+					});
+					if(found !== false){
+						result.apps = result.apps.splice(idx,1);
+						result.save(function(err){
+							if(err){
+								console.log("Err");
+							}
+							res.json({message: "Deleted"});
+						})
+					}
+				}
+			}
+		});
+	},
+	getSingleState: function(req,res){
+		model.findOne({uuid: req.params.id}, 'uuid apps', function(err,result){
+			if(err){
+				debug(err);
+				res.status(500).json({message: "An error has occured"});
+			}
+			else if(!result){
+				res.status(404).json({message:"Invalid UUID"});
+			}
+			else{
+				//all exists ok
+
+				if(!result.apps || result.apps.length === 0){
+					res.status(404).json({message: "App id doesn't exist in the user's state "});
+					return;
+				}
+
+				var found = null;
+
+				result.apps.forEach(function(app){
+					if(app.id === req.params.appId){
+						app.states.forEach(function(state){
+							if(state.id === req.params.stateId){
+								found = true;
+							}
+						})
+					}
+				});
+
+				if(!found){
+					res.status(404).json({message: "App or state doesn't exist in the user's state"});
+					return;
+				}
+
+				objectsSchema.getObjects([req.params.stateId], function(err,docs){
+					res.json(docs);
+				})
 			}
 		});
 	}

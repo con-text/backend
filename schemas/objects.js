@@ -117,5 +117,30 @@ module.exports = {
 				});
 			}
 		});
+	},
+	getObjects: function(idArray, cb){
+
+		if(typeof idArray[0] === "object"){
+			idArray.forEach(function(id, idx){
+				idArray[idx] = id.id;
+			});
+		}
+		model.find({
+			'_id': {$in: idArray}
+		}, function(err,docs){
+			console.log(idArray);
+			console.log(docs);
+			var idObj = {};
+			
+			docs.forEach(function(doc){
+				idObj[doc._id] = true;
+			});
+			idArray.forEach(function(id){
+				if(!idObj[id]){
+					console.log("Didnt find",id);
+				}
+			});
+			cb(err,docs);
+		});
 	}
 };
