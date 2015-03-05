@@ -237,7 +237,7 @@ module.exports = {
 				else{
 					var found = false;
 					result.apps.forEach(function(app,idx){
-						if(app.id === req.params.appID){
+						if(app.id == req.params.appId){
 							found = idx;
 						}
 					});
@@ -266,17 +266,163 @@ module.exports = {
 			else{
 				//all exists ok
 
+				if(!result.apps){
+					result.apps = [];
+				}
+
+				if(req.params.stateId == 0){
+					//create one, put it in the apps  db and return the id
+					objectsSchema.createState(req.params.id, req.params.appId, req.body.state, function(err,newItem){
+						if(err){
+							res.json(err);
+						}
+						else{
+							var found = null;
+							result.apps.forEach(function(app,idx){
+								if(app.id == req.params.appId){
+									found = idx;
+								}
+							});
+							if(found === null){
+								result.apps.push({id: req.params.appId, states: [{id: newItem._id}]});
+							}
+							else{
+								result.apps[found].states.push({id: newItem._id});
+							}
+							result.markModified("apps");
+							result.save(function(err){
+								if(err){
+									res.json(err);
+									return;
+								}
+								res.json({message: {id: newItem._id}});
+							})
+						}
+					});
+				}
+				else{
+					var found = null;
+					result.apps.forEach(function(app){
+						if(app.id === req.params.appId){
+							app.states.forEach(function(state){
+								if(state.id == req.params.stateId){
+									found = true;
+								}
+							})
+						}
+					});
+
+					if(!found){
+						res.status(404).json({message: "App or state doesn't exist in the user's state"});
+						return;
+					}
+
+					objectsSchema.getObjects([req.params.stateId], function(err,docs){
+						res.json(docs);
+					})
+				}
+
+
+			}
+		});
+	},
+	postSingleState: function(req,res){
+		model.findOne({uuid: req.params.id}, 'uuid apps', function(err,result){
+			if(err){
+				debug(err);
+				res.status(500).json({message: "An error has occured"});
+			}
+			else if(!result){
+				res.status(404).json({message:"Invalid UUID"});
+			}
+			else{
+				//all exists ok
+
+
+				if(!result.apps){
+					result.apps = [];
+				}
+
+				if(req.params.stateId == 0){
+					//create one, put it in the apps  db and return the id
+					objectsSchema.createState(req.params.id, req.params.appId, req.body.state, function(err,newItem){
+						if(err){
+							res.json(err);
+						}
+						else{
+							var found = null;
+							result.apps.forEach(function(app,idx){
+								if(app.id === req.params.appId){
+									found = idx;
+								}
+							});
+							if(found === null){
+								result.apps.push({id: req.params.appId, states: [{id: newItem._id}]});
+							}
+							else{
+								result.apps[idx].states.push({id: newItem._id});
+							}
+
+							result.markModified("apps");
+							result.save(function(err){
+								if(err){
+									res.json(err);
+									return;
+								}
+								res.json({message: {id: newItem._id}});
+							})
+						}
+					});
+				}
+				else{
+					objectsSchema.getObjects([req.params.stateId], function(err,docs){
+						if(err){
+							res.send(err);
+						}
+						else{
+							docs[0].state = req.body.state;
+
+							docs[0].markModified("state");
+							docs[0].save(function(err,d,nt){
+								if(err){
+									res.json(err);
+								}
+								else{
+									res.json({message: "Updated"+nt});
+								}
+							})
+						}
+					})
+				}
+			}
+		});
+	},
+	//doesn't work yet
+	removeSingleState: function(req,res){
+		model.findOne({uuid: req.params.id}, 'uuid apps', function(err,result){
+			if(err){
+				debug(err);
+				res.status(500).json({message: "An error has occured"});
+			}
+			else if(!result){
+				res.status(404).json({message:"Invalid UUID"});
+			}
+			else{
+				//all exists ok
+
 				if(!result.apps || result.apps.length === 0){
 					res.status(404).json({message: "App id doesn't exist in the user's state "});
 					return;
 				}
 
 				var found = null;
-
-				result.apps.forEach(function(app){
-					if(app.id === req.params.appId){
-						app.states.forEach(function(state){
-							if(state.id === req.params.stateId){
+				var i,j;
+				result.apps.forEach(function(app,idx){
+					if(app.id == req.params.appId){
+						app.states.forEach(function(state,jdx){
+							if(state.id == req.params.stateId){
+								i = idx;
+								j = jdx;
 								found = true;
 							}
 						})
@@ -287,9 +433,19 @@ module.exports = {
 					res.status(404).json({message: "App or state doesn't exist in the user's state"});
 					return;
 				}
-
-				objectsSchema.getObjects([req.params.stateId], function(err,docs){
-					res.json(docs);
+				console.log(result.apps);
+				result.apps[i].states.splice(j,1);
+				result.markModified("apps");
+				result.save(function(err){
+					if(err){
+						res.json(err);
+						return;
+					}
+					objectsSchema.getObjects([req.params.stateId], function(err,docs){
+						docs[0].remove();
+						res.json(docs);
+					})
+					
 				})
 			}
 		});

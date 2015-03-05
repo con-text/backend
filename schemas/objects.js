@@ -84,7 +84,7 @@ module.exports = {
 				callback(err);
 			}
 			else{
-				callback(null);
+				callback(null, newState);
 			}
 		});
 	},
