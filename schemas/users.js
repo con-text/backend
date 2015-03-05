@@ -351,6 +351,7 @@ module.exports = {
 						}
 						else{
 							var found = null;
+
 							result.apps.forEach(function(app,idx){
 								if(app.id === req.params.appId){
 									found = idx;
@@ -360,7 +361,7 @@ module.exports = {
 								result.apps.push({id: req.params.appId, states: [{id: newItem._id}]});
 							}
 							else{
-								result.apps[idx].states.push({id: newItem._id});
+								result.apps[found].states.push({id: newItem._id});
 							}
 
 							result.markModified("apps");
