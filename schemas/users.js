@@ -140,6 +140,55 @@ module.exports = {
 			}
 		});
 	},
+	postAppStates: function(req,res){
+		model.findOne({uuid: req.params.id}, 'name profilePicUrl uuid apps', function(err, result){
+			if(err){
+				debug(err);
+				res.status(500).json({message: "An error has occured"});
+			}
+			else if(!result){
+				res.status(404).json({message:"Invalid UUID"});
+			}
+			else{
+				//should have a list of apps and states now, lets crawl through and grab the list of object ids
+
+				console.log(result);
+				if(!req.body.appId){
+					res.status(404).json({message: "Invalid appid"});
+					return;
+				}
+				if(!result.apps || result.apps.length === 0){
+					console.log("Found no apps");
+					res.json({message: result});
+					return;
+				}
+
+				//Loop through every app, there'll be a state property that's an array full of object ids
+				//push that to the array to look up, and keep track of the indices
+				var found = false;
+				result.apps.forEach(function(app, i){
+					if(app.id == req.body.appId){
+						found = true;
+					}
+				});
+
+				if(found){
+					res.json({message: "Added"});
+				}
+				else{
+					result.apps.push({id: req.body.appId, states:[]});
+					result.markModified("apps");
+					result.save(function(err){
+						if(err){
+							res.json(err);
+							return;
+						}
+						res.json({message: "Added"});
+					});
+				}
+			}
+		});
+	},
 	getApp: function(req,res){
 		model.findOne({uuid: req.params.id}, 'uuid apps', function(err,result){
 			if(err){

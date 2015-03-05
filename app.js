@@ -72,6 +72,7 @@ app.get('/users/:id', user.getFromUID);
 
 //routes for app states
 app.get('/users/:id/apps', user.getAppStates);
+app.post('/users/:id/apps', user.postAppStates);
 
 app.get('/users/:id/apps/:appId', user.getApp);
 app.post('/users/:id/apps/:appId', user.postApp);
