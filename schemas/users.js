@@ -226,50 +226,50 @@ module.exports = {
 		});
 	},
 	//are we going to do this based on changes?
-	postApp: function(req,res){
-		//add a new app to the states
-		model.findOne({uuid: req.params.id}, 'uuid apps', function(err,result){
-			if(err){
-				debug(err);
-				res.status(500).json({message: "An error has occured"});
-			}
-			else if(!result){
-				res.status(404).json({message:"Invalid UUID"});
-			}
-			else{
-				var found = false;
-				if(!result.apps || result.apps.length === 0){
-					//this is completely fine, add no problem
-					result.apps = [{id: req.params.appId, states: []}];
-				}
-				else{
-					result.apps.forEach(function(app){
-						if(app.id === req.params.appID){
-							found = true;
-						}
-					});
-					if(!found){
-						//add it in and return the object
-						result.apps.push({id: req.params.appId, states: []});
-					}
-				}
-				if(found){
-					//throw error
-					res.status(409).json({message: "App already exists for this user"});
-				}
-				else{
-					result.save(function(err){
-						if(err){
-							console.log(err);
-						}
-						else{
-							res.json({message: result});
-						}
-					});
-				}
-			}
-		});
-	},
+	// postApp: function(req,res){
+	// 	//add a new app to the states
+	// 	model.findOne({uuid: req.params.id}, 'uuid apps', function(err,result){
+	// 		if(err){
+	// 			debug(err);
+	// 			res.status(500).json({message: "An error has occured"});
+	// 		}
+	// 		else if(!result){
+	// 			res.status(404).json({message:"Invalid UUID"});
+	// 		}
+	// 		else{
+	// 			var found = false;
+	// 			if(!result.apps || result.apps.length === 0){
+	// 				//this is completely fine, add no problem
+	// 				result.apps = [{id: req.params.appId, states: []}];
+	// 			}
+	// 			else{
+	// 				result.apps.forEach(function(app){
+	// 					if(app.id === req.params.appID){
+	// 						found = true;
+	// 					}
+	// 				});
+	// 				if(!found){
+	// 					//add it in and return the object
+	// 					result.apps.push({id: req.params.appId, states: []});
+	// 				}
+	// 			}
+	// 			if(found){
+	// 				//throw error
+	// 				res.status(409).json({message: "App already exists for this user"});
+	// 			}
+	// 			else{
+	// 				result.save(function(err){
+	// 					if(err){
+	// 						console.log(err);
+	// 					}
+	// 					else{
+	// 						res.json({message: result});
+	// 					}
+	// 				});
+	// 			}
+	// 		}
+	// 	});
+	// },
 	deleteApp: function(req,res){
 		model.findOne({uuid: req.params.id}, 'uuid apps', function(err,result){
 			if(err){
@@ -392,7 +392,6 @@ module.exports = {
 					result.apps = [];
 				}
 
-				if(req.params.stateId == 0){
 					//create one, put it in the apps  db and return the id
 					objectsSchema.createState(req.params.id, req.params.appId, req.body.state, function(err,newItem){
 						if(err){
@@ -423,27 +422,27 @@ module.exports = {
 							})
 						}
 					});
-				}
-				else{
-					objectsSchema.getObjects([req.params.stateId], function(err,docs){
-						if(err){
-							res.send(err);
-						}
-						else{
-							docs[0].state = req.body.state;
+				// }
+				// else{
+				// 	objectsSchema.getObjects([req.params.stateId], function(err,docs){
+				// 		if(err){
+				// 			res.send(err);
+				// 		}
+				// 		else{
+				// 			docs[0].state = req.body.state;
 
-							docs[0].markModified("state");
-							docs[0].save(function(err,d,nt){
-								if(err){
-									res.json(err);
-								}
-								else{
-									res.json({message: "Updated"+nt});
-								}
-							})
-						}
-					})
-				}
+				// 			docs[0].markModified("state");
+				// 			docs[0].save(function(err,d,nt){
+				// 				if(err){
+				// 					res.json(err);
+				// 				}
+				// 				else{
+				// 					res.json({message: "Updated"+nt});
+				// 				}
+				// 			})
+				// 		}
+				// 	})
+				// }
 			}
 		});
 	},

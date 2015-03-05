@@ -75,10 +75,13 @@ app.get('/users/:id/apps', user.getAppStates);
 app.post('/users/:id/apps', user.postAppStates);
 
 app.get('/users/:id/apps/:appId', user.getApp);
-app.post('/users/:id/apps/:appId', user.postApp);
+// app.post('/users/:id/apps/', user.postApp);
+
+
+
+app.post('/users/:id/apps/:appId', user.postSingleState);
 
 app.get('/users/:id/apps/:appId/states/:stateId', user.getSingleState);
-app.post('/users/:id/apps/:appId/states/:stateId', user.postSingleState);
 app.delete('/users/:id/apps/:appId/states/:stateId', user.removeSingleState);
 
 
