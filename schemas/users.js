@@ -95,7 +95,7 @@ module.exports = {
 				res.status(404).json({message:"Invalid UUID"});
 			}
 			else{
-				res.json({message: result});
+				res.json(result);
 			}
 		});
 	},
@@ -131,7 +131,7 @@ module.exports = {
 
 				objectsSchema.getObjects(objects, function(err,docs){
 					docs.forEach(function(doc){
-						
+
 						//update the value from result with the fetched document
 						var mapping = keyToIdx[doc._id];
 						result.apps[mapping.i].states[mapping.j] = doc;
@@ -368,7 +368,11 @@ module.exports = {
 					}
 
 					objectsSchema.getObjects([req.params.stateId], function(err,docs){
-						res.json(docs);
+						if(err || docs.length === 0){
+							res.status(404).json({message: "Invalid state"});
+							return;
+						}
+						res.json(docs[0]);
 					})
 				}
 
@@ -419,7 +423,7 @@ module.exports = {
 									res.json(err);
 									return;
 								}
-								res.json({message: {id: newItem._id}});
+								res.json(newItem);
 							})
 						}
 					});
@@ -495,7 +499,7 @@ module.exports = {
 						docs[0].remove();
 						res.json(docs);
 					})
-					
+
 				})
 			}
 		});

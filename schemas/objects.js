@@ -99,6 +99,9 @@ module.exports = {
 			state = JSON.parse(state);
 		}
 		console.log("Creating state",uuid,appId, state);
+		if(!state){
+			state = {};
+		}
 		var newState = new model({owner: uuid, appId: appId, state: state });
 		newState.save(function(err){
 			if(err){
