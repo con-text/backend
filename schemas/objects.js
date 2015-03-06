@@ -70,7 +70,7 @@ module.exports = {
 		uuid = uuid.toLowerCase();
 		model.findOne({_id: objectId}, function(err,result){
 			console.log("looking for object",objectId);
-			if(err){
+			if(err || !result){
 				callback(false, err);
 			}
 			else{
