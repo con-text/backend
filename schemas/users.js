@@ -12,7 +12,8 @@ var schema = mongoose.Schema({
 	serverKey: String,
 	profilePicUrl: String,
 	uuid: String,
-	apps: Array
+	apps: Array,
+	deviceId: String
 });
 
 var model = mongoose.model("users", schema);
@@ -496,6 +497,36 @@ module.exports = {
 					})
 					
 				})
+			}
+		});
+	},
+	assocDevice: function(userId, deviceId, cb){
+		model.findOne({uuid: userId}, 'deviceId', function(err,result){
+			if(err){
+				cb(err);
+			}
+			else if(!result){
+				cb("User doesn't exist");
+			}
+			else{
+				if(!result.deviceId){
+					//ok to assoc
+					result.deviceId = deviceId;
+					result.save(function(err,doc,nx){
+						if(err){
+							cb(err);
+						}
+						else if(nx == 0){
+							cb("No documents updated");
+						}
+						else{
+							cb(false);
+						}
+					})
+				}
+				else{
+					cb("Device already associated");
+				}
 			}
 		});
 	}

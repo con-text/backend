@@ -19,6 +19,7 @@ var authScheme = require('./lib/authScheme.js');
 var syncState = require('./lib/syncState.js');
 var syncStateSocket = require('./lib/syncStateSocket.js');
 var objectRoutes = require('./lib/objectRoutes.js');
+var devicesRoutes = require('./lib/devicesRoutes.js');
 var cryptoTest = require('./lib/cryptoTest.js');
 var fs = require('fs');
 
@@ -115,12 +116,8 @@ app.get('/testRoute/enc/:plaintext/:key', cryptoTest.enc);
 app.get('/testRoute/dec/:ciphertext/:mac/:key', cryptoTest.dec);
 
 
+app.post('/devices/associate', devicesRoutes.assoc);
 
-
-
-app.get('/getMulObj', objectRoutes.getMultiple);
-
-// app.use(express.static(path.join(__dirname, 'public')));
 
 var server = app.listen(process.env.PORT || 3000, main);
 

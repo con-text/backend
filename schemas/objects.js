@@ -51,6 +51,19 @@ var dealWithChange = function(obj, changeInfo){
 	return false;
 }
 
+function applyChange(startText, changes){
+	var text = startText;
+	changes.forEach(function(change){
+		console.log("Applying","'"+change.text+"'", "to",text, change.cursor);
+		if(change.action === 1){
+			text = new ot.TextOperation().retain(change.cursor).insert(change.text).retain(text.length - change.cursor).apply(text);
+		}
+		else if(change.action === -1){
+			text = new ot.TextOperation().retain(change.cursor).delete(change.text).retain(text.length - change.text.length - change.cursor).apply(text);
+		}
+	});
+	return text;
+};
 
 module.exports = {
 	getState: function(uuid, objectId, callback){
@@ -97,6 +110,12 @@ module.exports = {
 			else{
 				if(!result.state)
 					result.state = {};
+
+				if(changeInfo.OTChanges){
+					console.log("Applying OT", changeInfo.OTChanges);
+					changeInfo.value = applyChange(changeInfo.value, changeInfo.OTChanges);
+				}
+
 				dealWithChange(result.state, changeInfo);
 				if(!result.state){
 					console.log("CHANGE DIDNT WORK");
