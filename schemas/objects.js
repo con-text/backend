@@ -75,7 +75,15 @@ module.exports = {
 			}
 			else{
 				//found the object, check that this user has access
-				if(result.owner.toLowerCase() === uuid || result.collaborators.indexOf(uuid) > -1){
+
+				var found = false;
+				result.collaborators.forEach(function(collaborator){
+					if(collaborator.toLowerCase() === uuid){
+						found = true;
+					}
+				});
+
+				if(found || result.owner.toLowerCase() === uuid){
 					callback(true, result);
 				}
 				else{
@@ -150,7 +158,7 @@ module.exports = {
 			console.log(idArray);
 			console.log(docs);
 			var idObj = {};
-			
+
 			docs.forEach(function(doc){
 				idObj[doc._id] = true;
 			});
@@ -160,6 +168,87 @@ module.exports = {
 				}
 			});
 			cb(err,docs);
+		});
+	},
+	getCollab: function(objectId,cb){
+		model.findOne({_id: objectId}, 'collaborators owner', function(err,result){
+			if(err || !result){
+				cb("No object found");
+			}
+			else{
+				result.collaborators.push(result.owner.toLowerCase());
+				cb(null, result.collaborators);
+			}
+		});
+	},
+	addCollab: function(objectId, userId, cb){
+		model.findOne({_id: objectId}, 'collaborators owner', function(err, result){
+			if(err || !result){
+				cb("No object found");
+			}
+			else{
+				var found = false;
+				var userIdL = userId.toLowerCase();
+				result.collaborators.forEach(function(collaborator){
+					if(collaborator.toLowerCase() == userIdL){
+						found = true;
+					}
+				});
+				if(result.owner.toLowerCase() !== userIdL && !found){
+					result.collaborators.push(userId);
+					result.markModified('collaborators');
+					result.save(function(err){
+						if(err){
+							cb(err);
+							return;
+						}
+						result.collaborators.push(result.owner);
+						cb(null, result.collaborators);
+
+					});
+				}
+				else{
+					result.collaborators.push(result.owner);
+					cb(null, result.collaborators)
+				}
+			}
+		});
+	},
+	removeCollab: function(objectId, userId, cb){
+		model.findOne({_id: objectId}, 'collaborators owner', function(err, result){
+			if(err || !result){
+				cb("No object found");
+			}
+			else{
+				var found = false;
+				var userIdL = userId.toLowerCase();
+				result.collaborators.forEach(function(collaborator, idx){
+					if(collaborator.toLowerCase() == userIdL){
+						found = idx;
+					}
+				});
+				if(result.owner.toLowerCase() === userIdL){
+					cb("Can't remove owner");
+				}
+				else if(found !== false){
+					//user was found, remove them
+					result.collaborators.splice(found, 1);
+					result.markModified('collaborators');
+					result.save(function(err){
+						if(err){
+							cb(err);
+							return;
+						}
+						result.collaborators.push(result.owner);
+						cb(null, result.collaborators);
+
+					});
+				}
+				else{
+					result.collaborators.push(result.owner);
+					cb(null, result.collaborators);
+				}
+			}
 		});
 	}
 };
