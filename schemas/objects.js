@@ -151,6 +151,7 @@ module.exports = {
 	getObjects: function(idArray, cb){
 
 		if(typeof idArray[0] === "object"){
+			console.log("Found object type");
 			idArray.forEach(function(id, idx){
 				idArray[idx] = id.id;
 			});
@@ -158,9 +159,12 @@ module.exports = {
 		model.find({
 			'_id': {$in: idArray}
 		}, function(err,docs){
-			console.log(idArray);
-			console.log(docs);
+			console.log(err)
+			console.log("idarr",idArray);
+			console.log("docs",docs);
 			var idObj = {};
+
+
 
 			docs.forEach(function(doc){
 				idObj[doc._id] = true;

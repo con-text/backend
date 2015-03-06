@@ -111,7 +111,7 @@ module.exports = {
 			else{
 				//should have a list of apps and states now, lets crawl through and grab the list of object ids
 
-				var objects = [];
+				var objectList = [];
 				var keyToIdx = {};
 				console.log(result);
 				if(!result.apps || result.apps.length === 0){
@@ -124,12 +124,14 @@ module.exports = {
 				//push that to the array to look up, and keep track of the indices
 				result.apps.forEach(function(app, i){
 					app.states.forEach(function(state, j) {
-						objects.push(state.id);
+						//cast to string
+						objectList.push(state.id + '');
 						keyToIdx[state.id] = {i: i, j:j};
 					});
 				});
 
-				objectsSchema.getObjects(objects, function(err,docs){
+				console.log("Passing",objectList,"To get objects");
+				objectsSchema.getObjects(objectList, function(err,docs){
 					docs.forEach(function(doc){
 
 						//update the value from result with the fetched document
