@@ -332,9 +332,11 @@ module.exports = {
 					}
 				});
 
-				// if(!found){
-				// 	object
-				// }
+				if(!found){
+					objectsSchema.getState(req.params.id, req.params.stateId, function(exists, message){
+						found = exists;
+					});
+				}
 
 				if(!found){
 					res.status(404).json({message: "App or state doesn't exist in the user's state"});
@@ -370,57 +372,36 @@ module.exports = {
 					result.apps = [];
 				}
 
-					//create one, put it in the apps  db and return the id
-					objectsSchema.createState(req.params.id, req.params.appId, req.body.state, function(err,newItem){
-						if(err){
-							res.json(err);
+				//create one, put it in the apps  db and return the id
+				objectsSchema.createState(req.params.id, req.params.appId, req.body.state, function(err,newItem){
+					if(err){
+						res.json(err);
+					}
+					else{
+						var found = null;
+
+						result.apps.forEach(function(app,idx){
+							if(app.id === req.params.appId){
+								found = idx;
+							}
+						});
+						if(found === null){
+							result.apps.push({id: req.params.appId, states: [{id: newItem._id}]});
 						}
 						else{
-							var found = null;
-
-							result.apps.forEach(function(app,idx){
-								if(app.id === req.params.appId){
-									found = idx;
-								}
-							});
-							if(found === null){
-								result.apps.push({id: req.params.appId, states: [{id: newItem._id}]});
-							}
-							else{
-								result.apps[found].states.push({id: newItem._id});
-							}
-
-							result.markModified("apps");
-							result.save(function(err){
-								if(err){
-									res.json(err);
-									return;
-								}
-								res.json(newItem);
-							})
+							result.apps[found].states.push({id: newItem._id});
 						}
-					});
-				// }
-				// else{
-				// 	objectsSchema.getObjects([req.params.stateId], function(err,docs){
-				// 		if(err){
-				// 			res.send(err);
-				// 		}
-				// 		else{
-				// 			docs[0].state = req.body.state;
 
-				// 			docs[0].markModified("state");
-				// 			docs[0].save(function(err,d,nt){
-				// 				if(err){
-				// 					res.json(err);
-				// 				}
-				// 				else{
-				// 					res.json({message: "Updated"+nt});
-				// 				}
-				// 			})
-				// 		}
-				// 	})
-				// }
+						result.markModified("apps");
+						result.save(function(err){
+							if(err){
+								res.json(err);
+								return;
+							}
+							res.json(newItem);
+						})
+					}
+				});
 			}
 		});
 	},
@@ -455,6 +436,12 @@ module.exports = {
 						})
 					}
 				});
+
+				if(!found){
+					objectsSchema.getState(req.params.id, req.params.stateId, function(exists, message){
+						found = exists;
+					});
+				}
 
 				if(!found){
 					res.status(404).json({message: "App or state doesn't exist in the user's state"});
