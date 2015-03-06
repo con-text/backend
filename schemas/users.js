@@ -320,61 +320,34 @@ module.exports = {
 					result.apps = [];
 				}
 
-				if(req.params.stateId == 0){
-					//create one, put it in the apps  db and return the id
-					objectsSchema.createState(req.params.id, req.params.appId, req.body.state, function(err,newItem){
-						if(err){
-							res.json(err);
-						}
-						else{
-							var found = null;
-							result.apps.forEach(function(app,idx){
-								if(app.id == req.params.appId){
-									found = idx;
-								}
-							});
-							if(found === null){
-								result.apps.push({id: req.params.appId, states: [{id: newItem._id}]});
-							}
-							else{
-								result.apps[found].states.push({id: newItem._id});
-							}
-							result.markModified("apps");
-							result.save(function(err){
-								if(err){
-									res.json(err);
-									return;
-								}
-								res.json({message: {id: newItem._id}});
-							})
-						}
-					});
-				}
-				else{
-					var found = null;
-					result.apps.forEach(function(app){
-						if(app.id === req.params.appId){
-							app.states.forEach(function(state){
-								if(state.id == req.params.stateId){
-									found = true;
-								}
-							})
-						}
-					});
 
-					if(!found){
-						res.status(404).json({message: "App or state doesn't exist in the user's state"});
+				var found = null;
+				result.apps.forEach(function(app){
+					if(app.id === req.params.appId){
+						app.states.forEach(function(state){
+							if(state.id == req.params.stateId){
+								found = true;
+							}
+						})
+					}
+				});
+
+				// if(!found){
+				// 	object
+				// }
+
+				if(!found){
+					res.status(404).json({message: "App or state doesn't exist in the user's state"});
+					return;
+				}
+
+				objectsSchema.getObjects([req.params.stateId], function(err,docs){
+					if(err || docs.length === 0){
+						res.status(404).json({message: "Invalid state"});
 						return;
 					}
-
-					objectsSchema.getObjects([req.params.stateId], function(err,docs){
-						if(err || docs.length === 0){
-							res.status(404).json({message: "Invalid state"});
-							return;
-						}
-						res.json(docs[0]);
-					})
-				}
+					res.json(docs[0]);
+				});
 
 
 			}
