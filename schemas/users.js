@@ -336,6 +336,7 @@ module.exports = {
 
 				if(!found){
 					objectsSchema.getState(req.params.id, req.params.stateId, function(exists, message){
+						console.log("not found, looking up", exists, message);
 						found = exists;
 					});
 				}
