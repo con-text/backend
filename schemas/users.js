@@ -336,25 +336,42 @@ module.exports = {
 
 				if(!found){
 					objectsSchema.getState(req.params.id, req.params.stateId, function(exists, message){
-						console.log("not found, looking up", exists, message);
-						found = exists;
+						console.log("not found, looking up", req.params.id, exists, message);
+						if(!exists){
+							res.status(404).json({message: "App or state doesn't exist in the user's state"});
+						}
+						else{
+							message.collaborators.forEach(function(collab){
+								if(collab.toLowerCase() == req.params.id.toLowerCase()){
+									found = true;
+								}
+							});
+							if(found){
+								objectsSchema.getObjects([req.params.stateId], function(err,docs){
+									if(err || docs.length === 0){
+										res.status(404).json({message: "Invalid state"});
+										return;
+									}
+									res.json(docs[0]);
+								});
+							}
+							else{
+								res.status(404).json({message: "Invalid state"});
+								return;
+							}
+						}
+
 					});
 				}
-
-				if(!found){
-					res.status(404).json({message: "App or state doesn't exist in the user's state"});
-					return;
+				else{
+					objectsSchema.getObjects([req.params.stateId], function(err,docs){
+						if(err || docs.length === 0){
+							res.status(404).json({message: "Invalid state"});
+							return;
+						}
+						res.json(docs[0]);
+					});
 				}
-
-				objectsSchema.getObjects([req.params.stateId], function(err,docs){
-					if(err || docs.length === 0){
-						res.status(404).json({message: "Invalid state"});
-						return;
-					}
-					res.json(docs[0]);
-				});
-
-
 			}
 		});
 	},
