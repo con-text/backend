@@ -137,7 +137,7 @@ io.on('connection', function(socket){
 		syncStateSocket.get(msg.uuid, msg.objectId, function(success, message){
 			if(success){
 				console.log("Joining room", msg.objectId);
-				socket.join(msg.objectId);
+				// socket.join(msg.objectId);
 				// message.socketId = msg.socketId;
 				var newPacket = {state: message.state, _id: message._id, appId: message.appId,
 								owner: message.owner, collaborators: message.collaborators, socketId: msg.socketId};
@@ -151,17 +151,89 @@ io.on('connection', function(socket){
 	});
 
 	socket.on('stateChange', function(msg){
-		console.log("Got statechange",msg,"from socketClient");
+		console.log("Got statechange",msg.uuid,msg.objectId,msg.value,"from socketClient");
 		//the state needs to be synced with the backend here
 		syncStateSocket.post(msg.uuid, msg.objectId, msg, function(error, message){
 			console.log("Sending syncedState");
-			socket.emit('syncedState', {socketId: msg.socketId, action: msg.action, path: msg.path, property: msg.property,
+			io.sockets.emit('syncedState', {socketId: msg.socketId, action: msg.action, path: msg.path, property: msg.property,
 						value: msg.value, objectId: msg.objectId});
 		});
 	});
 
 
 });
+
+
+//need to define something using
+var people = {};
+var socketIdToPerson = {};
+io.on('connection', function(socket){
+	console.log('a user connected to the socket server');
+
+	socket.on('initRoom', function(msg){
+		if(msg.uuid){
+			console.log("Init for user",msg.uuid);
+			people[msg.uuid] = {socket: socket};
+			socketIdToPerson[socket.id] = msg.uuid;
+		}
+		else{
+			console.log("USER ID MISSING FROM INITROOM PACKET");
+		}
+	});
+
+	socket.on('disconnect', function(msg){
+		console.log("Deleting user from the socketmap", socketIdToPerson[socket.id]);
+		delete people[socketIdToPerson[socket.id]];
+		delete socketIdToPerson[socket.id];
+	});
+
+	socket.on('leaveRoom', function(msg){
+		console.log("Deleting user from the socketmap", socketIdToPerson[socket.id]);
+		delete people[socketIdToPerson[socket.id]];
+		delete socketIdToPerson[socket.id];
+	})
+
+	socket.on('requestInitialFromBackend', function(msg){
+		console.log('requestInitialFromBackend', msg.uuid, msg.objectId);
+		syncStateSocket.get(msg.uuid, msg.objectId, function(success, message){
+			if(success){
+				// message.socketId = msg.socketId;
+				var newPacket = {state: message.state, _id: message._id, appId: message.appId,
+								owner: message.owner, collaborators: message.collaborators, objectId: msg.objectId};
+				// console.log("Sending",newPacket);
+				socket.emit('sendInitialFromBackend', newPacket);
+			}
+			else{
+				socket.emit('sendInitialFromBackend', {objectId: msg.objectId, state: false});
+			}
+		});
+	});
+
+	socket.on('stateChange', function(msg){
+		console.log("Got statechange",msg.uuid,msg.objectId,msg.value,"from socketClient");
+		//the state needs to be synced with the backend here
+		syncStateSocket.post(msg.uuid, msg.objectId, msg, function(error, message){
+			console.log("State changed and updated in db, send changes to collab", message.collaborators);
+
+			//try send the changes to everyone who needs to know about it
+			var toSendTo = message.collaborators.concat(message.owner);
+			console.log(toSendTo);
+			toSendTo.forEach(function(person){
+				//the person exists in the array AND it's not the original sender
+				if(people[person] && person !== msg.uuid){
+					// console.log(people[person]);
+					console.log("Sending change to",person,msg.value);
+					io.to(people[person].socket.id).emit('syncedState', {socketId: msg.socketId, action: msg.action, path: msg.path, property: msg.property,
+								value: msg.value, objectId: msg.objectId});
+				}
+			});
+		});
+	});
+
+
+});
+
+
 
 app.disableLog = function(){
 	global.enableLogging = false;

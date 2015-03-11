@@ -37,8 +37,8 @@ var deleteValueFromArray = function(obj,arr,prop){
 }
 
 var dealWithChange = function(obj, changeInfo){
-	console.log(obj);
-	console.log(changeInfo);
+	// console.log(obj);
+	// console.log(changeInfo);
 	switch(changeInfo.action){
 		case "added":
 		case "changed":
@@ -116,7 +116,7 @@ module.exports = {
 		this.getState(uuid, objectId, function(success, result){
 			if(!success){
 				console.log("State doesn't exist", result);
-				callback(false, result);
+				callback(true, "State doesn't exist");
 			}
 			else{
 				if(!result.state)
@@ -137,12 +137,12 @@ module.exports = {
 				}
 				result.markModified("state."+changeInfo.path.join(".")+changeInfo.property);
 				result.save(function(err, gotback, nt){
-					// console.log("Saving state", err);
-					if(err){
-						callback(false, err);
+					console.log("Saving state", err,nt);
+					if(!err){
+						callback(false, gotback);
 					}
 					else{
-						callback(true);
+						callback(true, err);
 					}
 				});
 			}
@@ -159,9 +159,9 @@ module.exports = {
 		model.find({
 			'_id': {$in: idArray}
 		}, function(err,docs){
-			console.log(err)
-			console.log("idarr",idArray);
-			console.log("docs",docs);
+			// console.log(err)
+			// console.log("idarr",idArray);
+			// console.log("docs",docs);
 			var idObj = {};
 
 
