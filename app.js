@@ -22,7 +22,7 @@ var objectRoutes = require('./lib/objectRoutes.js');
 var devicesRoutes = require('./lib/devicesRoutes.js');
 var cryptoTest = require('./lib/cryptoTest.js');
 var fs = require('fs');
-
+var redisConfig = require('./lib/config/redis');
 var bodyParser = require('body-parser');
 
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -31,7 +31,6 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
 var mongoPath = "";
-
 
 //this is for logging into the db. I'm reluctant to set ENV VARS when developing
 //locally as the gulpfile is public, and it would be a pain to add them manually
@@ -74,12 +73,7 @@ app.get('/users/:id', user.getFromUID);
 //routes for app states
 app.get('/users/:id/apps', user.getAppStates);
 app.post('/users/:id/apps', user.postAppStates);
-
 app.get('/users/:id/apps/:appId', user.getApp);
-// app.post('/users/:id/apps/', user.postApp);
-
-
-
 app.post('/users/:id/apps/:appId', user.postSingleState);
 
 app.get('/users/:id/apps/:appId/states/:stateId', user.getSingleState);
@@ -125,12 +119,15 @@ app.post('/devices/associate', devicesRoutes.assoc);
 
 var server = app.listen(process.env.PORT || 3000, main);
 
+// Configure redis connection
+var redisClient = redisConfig.connect();
+var redisClientSub = redisConfig.connectSubscriber();
+
 var io = require('socket.io')(server);
 
 //need to define something using
 io.on('connection', function(socket){
 	console.log('a user connected to the socket server');
-
 
 	socket.on('getInitialFromBackend', function(msg){
 		console.log('getInitialFromBackend', msg);
@@ -164,6 +161,7 @@ io.on('connection', function(socket){
 });
 
 
+
 //need to define something using
 var people = {};
 var socketIdToPerson = {};
@@ -175,23 +173,38 @@ io.on('connection', function(socket){
 			console.log("Init for user",msg.uuid);
 			people[msg.uuid] = {socket: socket};
 			socketIdToPerson[socket.id] = msg.uuid;
+
+			// Send pending notifications
+			redisClient.lrange(msg.uuid, 0, -1, function(err, values) {
+				if(err) {
+					console.error("Error getting notifications", err);
+				} else {
+					// Send each value for the socket
+					values.forEach(function(value) {
+						var notification = JSON.parse(value);
+						console.log("REDIS: Found pending notification", notification);
+						people[msg.uuid].socket.emit('notification', notification);
+						redisClient.lpop(msg.uuid);
+					});
+				}
+			});
 		}
 		else{
 			console.log("USER ID MISSING FROM INITROOM PACKET");
 		}
 	});
 
-	socket.on('disconnect', function(msg){
+	socket.on('disconnect', function() {
 		console.log("Deleting user from the socketmap", socketIdToPerson[socket.id]);
 		delete people[socketIdToPerson[socket.id]];
 		delete socketIdToPerson[socket.id];
 	});
 
-	socket.on('leaveRoom', function(msg){
+	socket.on('leaveRoom', function(){
 		console.log("Deleting user from the socketmap", socketIdToPerson[socket.id]);
 		delete people[socketIdToPerson[socket.id]];
 		delete socketIdToPerson[socket.id];
-	})
+	});
 
 	socket.on('requestInitialFromBackend', function(msg){
 		console.log('requestInitialFromBackend', msg.uuid, msg.objectId);
@@ -229,11 +242,34 @@ io.on('connection', function(socket){
 			});
 		});
 	});
-
-
 });
 
 
+/**
+* wait for messages from redis channel, on message
+* send updates on the rooms named after channels.
+*
+* This sends updates to users.
+*/
+redisClientSub.on("message", function(channel, message){
+
+	message = message || '';
+	var notification = JSON.parse(message);
+
+	notification = notification || {};
+	var personId = notification.userToShareId;
+
+	console.log("REDIS: Got message: " + message);
+	if(personId && people[personId]) {
+		io.to(people[personId].socket.id).emit('notification', notification);
+		console.log("REDIS: Sending message: " + personId);
+	} else if(personId) {
+		// Store notification to wait for user to log in
+		redisClient.lpush(personId, message);
+		console.log("REDIS: User not present, pushing to the queue: " + personId);
+	}
+
+});
 
 app.disableLog = function(){
 	global.enableLogging = false;
