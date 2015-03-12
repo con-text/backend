@@ -228,51 +228,6 @@ module.exports = {
 			}
 		});
 	},
-	//are we going to do this based on changes?
-	// postApp: function(req,res){
-	// 	//add a new app to the states
-	// 	model.findOne({uuid: req.params.id}, 'uuid apps', function(err,result){
-	// 		if(err){
-	// 			debug(err);
-	// 			res.status(500).json({message: "An error has occured"});
-	// 		}
-	// 		else if(!result){
-	// 			res.status(404).json({message:"Invalid UUID"});
-	// 		}
-	// 		else{
-	// 			var found = false;
-	// 			if(!result.apps || result.apps.length === 0){
-	// 				//this is completely fine, add no problem
-	// 				result.apps = [{id: req.params.appId, states: []}];
-	// 			}
-	// 			else{
-	// 				result.apps.forEach(function(app){
-	// 					if(app.id === req.params.appID){
-	// 						found = true;
-	// 					}
-	// 				});
-	// 				if(!found){
-	// 					//add it in and return the object
-	// 					result.apps.push({id: req.params.appId, states: []});
-	// 				}
-	// 			}
-	// 			if(found){
-	// 				//throw error
-	// 				res.status(409).json({message: "App already exists for this user"});
-	// 			}
-	// 			else{
-	// 				result.save(function(err){
-	// 					if(err){
-	// 						console.log(err);
-	// 					}
-	// 					else{
-	// 						res.json({message: result});
-	// 					}
-	// 				});
-	// 			}
-	// 		}
-	// 	});
-	// },
 	deleteApp: function(req,res){
 		model.findOne({uuid: req.params.id}, 'uuid apps', function(err,result){
 			if(err){
@@ -481,6 +436,53 @@ module.exports = {
 					})
 
 				})
+			}
+		});
+	},
+	addSingleState: function(uuid, appId, stateId, cb){
+		model.findOne({uuid: uuid}, 'uuid apps', function(err,result){
+			if(err || !result){
+				//user doesn't exist
+				cb(true, "User doesn't exist");
+			}
+			else{
+				//user exists
+				var found = false;
+				result.apps.forEach(function(app, idx){
+					if(app.id == appId){
+						found = idx;
+					}
+				});
+				if(found === false){
+					found = result.apps.push({id: appId, states:[]}) - 1;
+				}
+				var idx = found;
+					found = false;
+				result.apps[idx].states.forEach(function(state, idx){
+					if(state.id == stateId){
+						found = true;
+					}
+				});
+				if(found){
+					cb(false, result);
+				}
+				else{
+					result.apps[idx].states.push({id: stateId});
+					result.markModified('apps');
+					result.save(function(err,doc,nx){
+						if(err){
+							cb(true, err);
+						}
+						else{
+							if(nx === 0){
+								cb(true, "No documents were updated");
+							}
+							else{
+								cb(false, doc);
+							}
+						}
+					});
+				}
 			}
 		});
 	},

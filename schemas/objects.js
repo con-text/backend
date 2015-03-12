@@ -189,6 +189,7 @@ module.exports = {
 		});
 	},
 	addCollab: function(objectId, userId, cb){
+		console.log("####################ENTERING ADD COLAB", objectId, userId);
 		model.findOne({_id: objectId}, 'collaborators owner', function(err, result){
 			if(err || !result){
 				cb("No object found");
@@ -201,6 +202,7 @@ module.exports = {
 						found = true;
 					}
 				});
+				console.log("#################",result.owner,userIdL,found);
 				if(result.owner.toLowerCase() !== userIdL && !found){
 					result.collaborators.push(userId);
 					result.markModified('collaborators');
@@ -209,8 +211,15 @@ module.exports = {
 							cb(err);
 							return;
 						}
-						result.collaborators.push(result.owner);
-						cb(null, result.collaborators);
+						users.addSingleState(userId, result.appId, objectId, function(error, result){
+							console.log("Added single state",userId,result.appId,objectId,error);
+							if(error){
+								res.send(result);
+								return;
+							}
+							result.collaborators.push(result.owner);
+							cb(null, result.collaborators);
+						});
 
 					});
 				}
