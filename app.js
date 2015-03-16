@@ -128,43 +128,6 @@ var server = app.listen(process.env.PORT || 3000, main);
 var io = require('socket.io')(server);
 
 //need to define something using
-io.on('connection', function(socket){
-	console.log('a user connected to the socket server');
-
-
-	socket.on('getInitialFromBackend', function(msg){
-		console.log('getInitialFromBackend', msg);
-		syncStateSocket.get(msg.uuid, msg.objectId, function(success, message){
-			if(success){
-				console.log("Joining room", msg.objectId);
-				// socket.join(msg.objectId);
-				// message.socketId = msg.socketId;
-				var newPacket = {state: message.state, _id: message._id, appId: message.appId,
-								owner: message.owner, collaborators: message.collaborators, socketId: msg.socketId};
-				console.log("Sending",newPacket);
-				socket.emit('gotInitialFromBackend', newPacket);
-			}
-			else{
-				socket.emit('gotInitialFromBackend', {socketId: msg.socketId, state: false});
-			}
-		});
-	});
-
-	socket.on('stateChange', function(msg){
-		console.log("Got statechange",msg.uuid,msg.objectId,msg.value,"from socketClient");
-		//the state needs to be synced with the backend here
-		syncStateSocket.post(msg.uuid, msg.objectId, msg, function(error, message){
-			console.log("Sending syncedState");
-			io.sockets.emit('syncedState', {socketId: msg.socketId, action: msg.action, path: msg.path, property: msg.property,
-						value: msg.value, objectId: msg.objectId});
-		});
-	});
-
-
-});
-
-
-//need to define something using
 var people = {};
 var socketIdToPerson = {};
 io.on('connection', function(socket){

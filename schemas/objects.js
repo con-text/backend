@@ -2,6 +2,8 @@
 
 var mongoose = require('mongoose');
 
+
+
 var schema = mongoose.Schema({
 	state: Object,
 	appId: String,
@@ -39,16 +41,49 @@ var deleteValueFromArray = function(obj,arr,prop){
 var dealWithChange = function(obj, changeInfo){
 	// console.log(obj);
 	// console.log(changeInfo);
+
 	switch(changeInfo.action){
 		case "added":
 		case "changed":
-			return updateValueFromArray(obj, changeInfo.path, changeInfo.property, changeInfo.value);
+			switch(changeInfo.type){
+				case "array":
+					return parseArrayChange(obj, changeInfo.path, changeInfo.splice, changeInfo.value);
+				break;
+				case "string":
+					return updateValueFromArray(obj, changeInfo.path, changeInfo.property, changeInfo.value);
+				break;
+				case "number":
+				default:
+					return updateValueFromArray(obj, changeInfo.path, changeInfo.property, changeInfo.value);
+				break;
+			}
 		break;
 		case "removed":
 			return deleteValueFromArray(obj, changeInfo.path, changeInfo.property);
 		break;
 	}
 	return false;
+}
+
+
+//assume that we're doing one change at a time for now...
+//plus its just add and remove....
+function parseArrayChange(obj, arr, splice, value){
+	for(var i = 0; i<arr.length; i++){
+		obj = obj[arr[i]];
+		if(obj === undefined){
+			return false;
+		}
+	}
+	console.log("parse array change");
+	console.log(obj,splice,value);
+	if(splice.removed.length !== 0){
+		obj.splice(splice.index);
+	}
+	else{
+		obj.splice(splice.index, 0, value);
+	}
+	return obj;
 }
 
 function applyChange(startText, changes){
@@ -122,20 +157,34 @@ module.exports = {
 				if(!result.state)
 					result.state = {};
 
+				console.log(changeInfo.path);
+				if(changeInfo.path[0] == ''){
+					changeInfo.path.shift();
+				}
+
+
 				if(changeInfo.OTChanges){
 					console.log("Applying OT", changeInfo.OTChanges);
 					changeInfo.value = applyChange(changeInfo.value, changeInfo.OTChanges);
 				}
-
+				
+				
 				dealWithChange(result.state, changeInfo);
 				if(!result.state){
 					console.log("CHANGE DIDNT WORK");
 				}
-				var pathInfo = changeInfo.path.join(".");
-				if(pathInfo.length !== 0){
-					pathInfo+=".";
+
+				console.log(result.state);
+
+				var pathInfo;
+				if(changeInfo.path[0] === ""){
+					pathInfo = changeInfo.path.slice(1).join(".");
 				}
-				result.markModified("state."+changeInfo.path.join(".")+changeInfo.property);
+				else{
+					pathInfo = changeInfo.path.join(".");
+				}
+				console.log("markmodified","state."+pathInfo);
+				result.markModified("state."+pathInfo);
 				result.save(function(err, gotback, nt){
 					console.log("Saving state", err,nt);
 					if(!err){
@@ -188,9 +237,9 @@ module.exports = {
 			}
 		});
 	},
-	addCollab: function(objectId, userId, cb){
+	addCollab: function(objectId, userId, userFunc, cb){
 		console.log("####################ENTERING ADD COLAB", objectId, userId);
-		model.findOne({_id: objectId}, 'collaborators owner', function(err, result){
+		model.findOne({_id: objectId}, 'collaborators owner appId', function(err, result){
 			if(err || !result){
 				cb("No object found");
 			}
@@ -211,7 +260,7 @@ module.exports = {
 							cb(err);
 							return;
 						}
-						users.addSingleState(userId, result.appId, objectId, function(error, result){
+						userFunc(userId, result.appId, objectId, function(error, resultUser){
 							console.log("Added single state",userId,result.appId,objectId,error);
 							if(error){
 								res.send(result);
