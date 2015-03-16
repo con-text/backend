@@ -199,8 +199,9 @@ io.on('connection', function(socket){
 				if(people[person] && person !== msg.uuid){
 					// console.log(people[person]);
 					console.log("Sending change to",person,msg.value);
-					io.to(people[person].socket.id).emit('syncedState', {socketId: msg.socketId, action: msg.action, path: msg.path, property: msg.property,
-								value: msg.value, objectId: msg.objectId});
+					// io.to(people[person].socket.id).emit('syncedState', {socketId: msg.socketId, action: msg.action, path: msg.path, property: msg.property,
+					// 			value: msg.value, objectId: msg.objectId});
+					io.to(people[person].socket.id).emit('syncedState', msg);
 				}
 			});
 		});
