@@ -1,7 +1,8 @@
 'use strict';
 
 var mongoose = require('mongoose');
-
+var richText = require('rich-text');
+var Delta = richText.Delta;
 
 
 var schema = mongoose.Schema({
@@ -50,7 +51,7 @@ var dealWithChange = function(obj, changeInfo){
 					return parseArrayChange(obj, changeInfo.path, changeInfo.splice, changeInfo.value);
 				break;
 				case "string":
-					return updateValueFromArray(obj, changeInfo.path, changeInfo.property, changeInfo.value);
+					return updateTextValue(obj, changeInfo.path, changeInfo.value, changeInfo);
 				break;
 				case "number":
 				default:
@@ -82,6 +83,30 @@ function parseArrayChange(obj, arr, splice, value){
 	}
 	else{
 		obj.splice(splice.index, 0, value);
+	}
+	return obj;
+}
+
+
+var updateTextValue = function(obj,arr,value, changeInfo){
+	console.log("UPDATING VALUES");
+	//loop through until we're at the right object
+	for(var i = 0; i<arr.length; i++){
+		obj = obj[arr[i]];
+		if(obj === undefined){
+			return false;
+		}
+	}
+	if(changeInfo.OTChanges){
+		//this needs to be done through OT, build the delta array first
+		//then apply the changes
+		var origObj = new Delta(obj);
+		var deltaObj = new Delta(value);
+		origObj.compose(deltaObj);
+		obj = origObj.ops;
+	}
+	else{
+		obj = value;
 	}
 	return obj;
 }
@@ -128,7 +153,6 @@ module.exports = {
 		});
 	},
 	createState: function(uuid, appId, state, callback){
-		// console.log(state);
 
 		if(typeof state === "string"){
 			state = JSON.parse(state);
@@ -161,18 +185,20 @@ module.exports = {
 				if(changeInfo.path[0] == ''){
 					changeInfo.path.shift();
 				}
-
-
-				if(changeInfo.OTChanges){
-					console.log("Applying OT", changeInfo.OTChanges);
-					changeInfo.value = applyChange(changeInfo.value, changeInfo.OTChanges);
-				}
 				
 				
-				dealWithChange(result.state, changeInfo);
-				if(!result.state){
+				var updatedValue = dealWithChange(result.state, changeInfo);
+
+				if(!updatedValue){
 					console.log("CHANGE DIDNT WORK");
 				}
+
+				var currentState = result.state;
+				for(var i = 0; i<changeInfo.path-1; i++){
+					currentState = currentState[changeInfo.path[i]];
+				}
+
+				currentState[changeInfo.path.slice(-1)] = updatedValue;
 
 				console.log(result.state);
 
@@ -188,6 +214,9 @@ module.exports = {
 				result.save(function(err, gotback, nt){
 					console.log("Saving state", err,nt);
 					if(!err){
+						if(changeInfo.pushedChange){
+							gotback.pushedChange = true;
+						}
 						callback(false, gotback);
 					}
 					else{

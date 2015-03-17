@@ -347,6 +347,8 @@ module.exports = {
 					result.apps = [];
 				}
 
+
+
 				//create one, put it in the apps  db and return the id
 				objectsSchema.createState(req.params.id, req.params.appId, req.body.state, function(err,newItem){
 					if(err){

@@ -192,6 +192,11 @@ io.on('connection', function(socket){
 			console.log("State changed and updated in db, send changes to collab", message.collaborators);
 
 			//try send the changes to everyone who needs to know about it
+			if(!message.collaborators){
+				//something has messed up with the return value
+				console.log("statechange error", error, message);
+				return;
+			}
 			var toSendTo = message.collaborators.concat(message.owner);
 			console.log(toSendTo);
 			toSendTo.forEach(function(person){
@@ -201,7 +206,12 @@ io.on('connection', function(socket){
 					console.log("Sending change to",person,msg.value);
 					// io.to(people[person].socket.id).emit('syncedState', {socketId: msg.socketId, action: msg.action, path: msg.path, property: msg.property,
 					// 			value: msg.value, objectId: msg.objectId});
-					io.to(people[person].socket.id).emit('syncedState', msg);
+					if(msg.pushedChange){
+						io.to(people[person].socket.id).emit('pushedChange', msg);
+					}
+					else{
+						io.to(people[person].socket.id).emit('syncedState', msg);
+					}
 				}
 			});
 		});
