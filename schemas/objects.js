@@ -9,13 +9,13 @@ var schema = mongoose.Schema({
 	state: Object,
 	appId: String,
 	collaborators: [String],
-	owner: String
+	owner: String,
+	title: String
 });
 
 var model = mongoose.model("objects", schema);
 
 var updateValueFromArray = function(obj,arr,prop,value){
-	console.log("UPDATING VALUES");
 	//loop through until we're at the right object
 	for(var i = 0; i<arr.length; i++){
 		obj = obj[arr[i]];
@@ -25,7 +25,7 @@ var updateValueFromArray = function(obj,arr,prop,value){
 	}
 	obj[prop] = value;
 	return obj;
-}
+};
 
 var deleteValueFromArray = function(obj,arr,prop){
 	for(var i = 0; i<arr.length; i++){
@@ -35,9 +35,9 @@ var deleteValueFromArray = function(obj,arr,prop){
 		}
 	}
 	//set the value and discard the changes
-	delete obj[prop]
+	delete obj[prop];
 	return obj;
-}
+};
 
 var dealWithChange = function(obj, changeInfo){
 	// console.log(obj);
@@ -49,22 +49,22 @@ var dealWithChange = function(obj, changeInfo){
 			switch(changeInfo.type){
 				case "array":
 					return parseArrayChange(obj, changeInfo.path, changeInfo.splice, changeInfo.value);
-				break;
+
 				case "string":
 					return updateTextValue(obj, changeInfo.path, changeInfo.value, changeInfo);
-				break;
+
 				case "number":
 				default:
 					return updateValueFromArray(obj, changeInfo.path, changeInfo.property, changeInfo.value);
-				break;
+
 			}
 		break;
 		case "removed":
 			return deleteValueFromArray(obj, changeInfo.path, changeInfo.property);
-		break;
+
 	}
 	return false;
-}
+};
 
 
 //assume that we're doing one change at a time for now...
@@ -109,7 +109,7 @@ var updateTextValue = function(obj,arr,value, changeInfo){
 		obj = value;
 	}
 	return obj;
-}
+};
 
 function applyChange(startText, changes){
 	var text = startText;
@@ -123,7 +123,7 @@ function applyChange(startText, changes){
 		}
 	});
 	return text;
-};
+}
 
 module.exports = {
 	getState: function(uuid, objectId, callback){
@@ -185,8 +185,8 @@ module.exports = {
 				if(changeInfo.path[0] == ''){
 					changeInfo.path.shift();
 				}
-				
-				
+
+
 				var updatedValue = dealWithChange(result.state, changeInfo);
 
 				if(!updatedValue){

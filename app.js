@@ -77,6 +77,7 @@ app.get('/users/:id/apps/:appId', user.getApp);
 app.post('/users/:id/apps/:appId', user.postSingleState);
 
 app.get('/users/:id/apps/:appId/states/:stateId', user.getSingleState);
+app.put('/users/:id/apps/:appId/states/:stateId', user.updateSingleState);
 app.delete('/users/:id/apps/:appId/states/:stateId', user.removeSingleState);
 
 app.get('/users/:id/apps/:appId/states/:stateId/collaborators', objectRoutes.getCollab);
