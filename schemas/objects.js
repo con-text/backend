@@ -14,6 +14,8 @@ var schema = mongoose.Schema({
 
 var model = mongoose.model("objects", schema);
 
+var objectLayer = require('../lib/objectLayer.js')(model);
+
 var updateValueFromArray = function(obj,arr,prop,value){
 	console.log("UPDATING VALUES");
 	//loop through until we're at the right object
@@ -128,29 +130,7 @@ function applyChange(startText, changes){
 module.exports = {
 	getState: function(uuid, objectId, callback){
 		uuid = uuid.toLowerCase();
-		model.findOne({_id: objectId}, function(err,result){
-			console.log("looking for object",objectId);
-			if(err || !result){
-				callback(false, err);
-			}
-			else{
-				//found the object, check that this user has access
-
-				var found = false;
-				result.collaborators.forEach(function(collaborator){
-					if(collaborator.toLowerCase() === uuid){
-						found = true;
-					}
-				});
-
-				if(found || result.owner.toLowerCase() === uuid){
-					callback(true, result);
-				}
-				else{
-					callback(false, "User doesn't have access to this object");
-				}
-			}
-		});
+		objectLayer.getState(uuid, objectId, callback);
 	},
 	createState: function(uuid, appId, state, callback){
 
@@ -172,6 +152,61 @@ module.exports = {
 		});
 	},
 	updateState: function(uuid, objectId, changeInfo, callback){
+		objectLayer.getState(uuid, objectId, function(error, result){
+			if(error){
+				console.log("State doesn't exist", error, result);
+				callback(true, "State doesn't exist");
+			}
+			else{
+				if(!result.state)
+					result.state = {};
+
+				console.log(changeInfo.path);
+				if(changeInfo.path[0] == ''){
+					changeInfo.path.shift();
+				}
+				
+				
+				var updatedValue = dealWithChange(result.state, changeInfo);
+
+				if(!updatedValue){
+					console.log("CHANGE DIDNT WORK");
+				}
+
+				var currentState = result.state;
+				for(var i = 0; i<changeInfo.path-1; i++){
+					currentState = currentState[changeInfo.path[i]];
+				}
+
+				currentState[changeInfo.path.slice(-1)] = updatedValue;
+
+				console.log(result.state);
+
+				var pathInfo;
+				if(changeInfo.path[0] === ""){
+					pathInfo = changeInfo.path.slice(1).join(".");
+				}
+				else{
+					pathInfo = changeInfo.path.join(".");
+				}
+				console.log("markmodified","state."+pathInfo);
+				// result.markModified("state."+pathInfo);
+				objectLayer.saveState(objectId, result, function(err, doc, nt){
+					console.log("Saving state", err, nt);
+					if(!err){
+						if(changeInfo.pushedChange){
+							doc.pushedChange = true;
+						}
+						callback(false, doc);
+					}
+					else{
+						callback(true, err);
+					}
+				});
+			}
+		});
+	},
+	updateStateAlt: function(uuid, objectId, changeInfo, callback){
 		this.getState(uuid, objectId, function(success, result){
 			if(!success){
 				console.log("State doesn't exist", result);
@@ -344,5 +379,6 @@ module.exports = {
 				}
 			}
 		});
-	}
+	},
+	model: model
 };
