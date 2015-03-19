@@ -261,6 +261,13 @@ module.exports = {
 			}
 		});
 	},
+
+	/**
+	* GET /users/:id/apps/:appId/states/:stateId
+	*
+	*	Get single state object
+	*
+	*/
 	getSingleState: function(req,res){
 		model.findOne({uuid: req.params.id}, 'uuid apps', function(err,result){
 			if(err){
@@ -330,6 +337,139 @@ module.exports = {
 			}
 		});
 	},
+
+	/**
+	* PUT /users/:id/apps/:appId/states/:stateId
+	*
+	*	Update state
+	*
+	*/
+	updateSingleState: function(req, res) {
+
+		// Find the user first
+		model.findOne({uuid: req.params.id}, 'uuid apps', function(err,result){
+			if(err){
+				debug(err);
+				res.status(500).json({message: "An error has occured"});
+			}
+			else if(!result){
+				res.status(404).json({message:"Invalid UUID"});
+			}
+			else {
+
+				// The users exists, ok
+
+				if(!result.apps){
+					result.apps = [];
+				}
+
+				// Find app
+				var found = null;
+				result.apps.forEach(function(app){
+					if(app.id === req.params.appId){
+						app.states.forEach(function(state){
+							if(state.id == req.params.stateId){
+								found = true;
+							}
+						})
+					}
+				});
+
+				if(!found){
+					objectsSchema.getState(req.params.id, req.params.stateId, function(exists, message){
+
+						if(!exists){
+							res.status(404).json({message: "App or state doesn't exist in the user's state"});
+						}
+						else{
+							message.collaborators.forEach(function(collab){
+								if(collab.toLowerCase() === req.params.id.toLowerCase()){
+									found = true;
+								}
+							});
+							if(found){
+								objectsSchema.getObjects([req.params.stateId], function(err,docs){
+									if(err || docs.length === 0){
+										res.status(404).json({message: "Invalid state"});
+										return;
+									}
+
+									// Update the object
+									Object.keys(req.body).forEach(function(key){
+
+										console.log('updating ' + key);
+										docs[0][key] = req.body[key];
+										docs[0].markModified(key);
+									});
+
+
+									// Save it the object
+									docs[0].save(function(err, doc, nt) {
+										if(err) {
+											res.status(404).send(err);
+											return;
+										}
+
+										if(nt !== 1) {
+											res.status(401).json({message: "Not update one", status: doc});
+											return;
+										}
+
+										// Send back updated state
+										res.json(doc);
+										return;
+									});
+
+								});
+							}
+							else{
+								res.status(404).json({message: "Invalid state"});
+								return;
+							}
+						}
+
+					});
+				}
+				else{
+					objectsSchema.getObjects([req.params.stateId], function(err,docs){
+						if(err || docs.length === 0){
+							res.status(404).json({message: "Invalid state"});
+							return;
+						}
+
+						var docToUpdate = docs[0];
+
+						// Update the object
+						Object.keys(req.body).forEach(function(key){
+
+							console.log('updating ' + key);
+							docs[0][key] = req.body[key];
+							docs[0].markModified(key);
+						});
+
+						// Save it the object
+						docToUpdate.save(function(err, doc, nt) {
+							if(err) {
+								res.status(404).send(err);
+								return;
+							}
+
+							if(nt !== 1) {
+								res.status(401).json({message: "Not update one", status: doc});
+								return;
+							}
+
+							// Send back updated state
+							res.json(doc);
+							return;
+						});
+					});
+				}
+			}
+		});
+
+	},
+
 	postSingleState: function(req,res){
 		model.findOne({uuid: req.params.id}, 'uuid apps', function(err,result){
 			if(err){
