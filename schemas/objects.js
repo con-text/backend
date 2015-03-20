@@ -10,7 +10,12 @@ var schema = mongoose.Schema({
 	appId: String,
 	collaborators: [String],
 	owner: String,
-	title: String
+	title: String,
+
+	// Window related stuff
+	isOpened: Boolean,
+	x: Number,
+	y: Number
 });
 
 var model = mongoose.model("objects", schema);
@@ -165,8 +170,8 @@ module.exports = {
 				if(changeInfo.path[0] == ''){
 					changeInfo.path.shift();
 				}
-				
-				
+
+
 				var updatedValue = dealWithChange(result.state, changeInfo);
 
 				if(!updatedValue){
