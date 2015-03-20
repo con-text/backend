@@ -19,7 +19,7 @@ module.exports = {
 			state = JSON.parse(state);
 		}
 		console.log("Creating state",uuid,appId, state);
-		this.getState(uuid, appId, function(err, result){
+		this.getState(uuid, appId, function(err) {
 			if(err){
 				//state doesn't already exist, lets create it
 				console.log("State doesn't exist, creating");
@@ -36,7 +36,7 @@ module.exports = {
 			else{
 				callback("State already exists", null);
 			}
-			
+
 		});
 	},
 	getState: function(uuid, appId, callback){

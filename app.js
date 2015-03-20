@@ -140,7 +140,6 @@ var redisClientSub = redisConfig.connectSubscriber();
 
 var io = require('socket.io')(server);
 
-
 var people = {};
 var socketIdToPerson = {};
 io.on('connection', function(socket){
@@ -248,14 +247,11 @@ redisClientSub.on("message", function(channel, message){
 	notification = notification || {};
 	var personId = notification.userToShareId;
 
-	console.log("REDIS: Got message: " + message);
 	if(personId && people[personId]) {
 		io.to(people[personId].socket.id).emit('notification', notification);
-		console.log("REDIS: Sending message: " + personId);
 	} else if(personId) {
 		// Store notification to wait for user to log in
 		redisClient.lpush(personId, message);
-		console.log("REDIS: User not present, pushing to the queue: " + personId);
 	}
 
 });
