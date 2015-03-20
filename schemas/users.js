@@ -298,7 +298,7 @@ module.exports = {
 
 				if(!found){
 					objectsSchema.getState(req.params.id, req.params.stateId, function(error, message){
-						console.log("not found, looking up", req.params, exists, message);
+						console.log("not found, looking up", req.params, error, message);
 						if(error){
 							res.status(404).json({message: "App or state doesn't exist in the user's state"});
 						}
