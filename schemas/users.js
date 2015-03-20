@@ -297,9 +297,9 @@ module.exports = {
 				});
 
 				if(!found){
-					objectsSchema.getState(req.params.id, req.params.stateId, function(exists, message){
-						console.log("not found, looking up", req.params.id, exists, message);
-						if(!exists){
+					objectsSchema.getState(req.params.id, req.params.stateId, function(error, message){
+						console.log("not found, looking up", req.params, exists, message);
+						if(error){
 							res.status(404).json({message: "App or state doesn't exist in the user's state"});
 						}
 						else{
