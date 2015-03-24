@@ -189,13 +189,16 @@ io.on('connection', function(socket){
 		syncStateSocket.get(msg.uuid, msg.objectId, function(success, message){
 			if(success){
 				// message.socketId = msg.socketId;
+				console.log("Collab from request initial",message.collaborators);
 				var newPacket = {state: message.state, _id: message._id, appId: message.appId,
-								owner: message.owner, collaborators: message.collaborators.push(message.owner),
+								owner: message.owner, collaborators: message.collaborators.slice(0).concat([message.owner]),
 								objectId: msg.objectId, online: objectToPeople[msg.objectId]};
 				if(!objectToPeople[msg.objectId]){
 					objectToPeople[msg.objectId] = [];
 				}
-				objectToPeople[msg.objectId].push(msg.uuid);
+				if(objectToPeople[msg.objectId].indexOf(msg.uuid) === -1){
+					objectToPeople[msg.objectId].push(msg.uuid);
+				}
 				// console.log("Sending",newPacket);
 				socket.emit('sendInitialFromBackend', newPacket);
 			}
