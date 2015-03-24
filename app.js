@@ -142,6 +142,7 @@ var io = require('socket.io')(server);
 
 var people = {};
 var socketIdToPerson = {};
+var objectToPeople = {};
 io.on('connection', function(socket){
 	console.log('a user connected to the socket server');
 
@@ -189,7 +190,12 @@ io.on('connection', function(socket){
 			if(success){
 				// message.socketId = msg.socketId;
 				var newPacket = {state: message.state, _id: message._id, appId: message.appId,
-								owner: message.owner, collaborators: message.collaborators, objectId: msg.objectId};
+								owner: message.owner, collaborators: message.collaborators,
+								objectId: msg.objectId, online: objectToPeople[msg.objectId]};
+				if(!objectToPeople[msg.objectId]){
+					objectToPeople[msg.objectId] = [];
+				}
+				objectToPeople[msg.objectId].push(msg.uuid);
 				// console.log("Sending",newPacket);
 				socket.emit('sendInitialFromBackend', newPacket);
 			}
@@ -198,6 +204,25 @@ io.on('connection', function(socket){
 			}
 		});
 	});
+
+	socket.on('requestFinalFromBackend', function(msg){
+		if(msg.uuid && msg.objectId){
+			var ref = objectToPeople[msg.objectId];
+			if(ref){
+				var index = ref.indexOf(msg.uuid);
+				console.log("Deleting",msg.uuid,"from",msg.objectId);
+				if(index > -1){
+					ref.splice(index,1);
+				}
+			}
+			else{
+				console.log("Invalid object id");
+			}
+		}
+		else{
+			console.log("objectId or uuid missing from request final from backend");
+		}
+	})
 
 	socket.on('stateChange', function(msg){
 		console.log("Got statechange",msg.uuid,msg.objectId,msg.value,"from socketClient");
