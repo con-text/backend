@@ -378,7 +378,7 @@ module.exports = {
 				if(!found){
 					objectsSchema.getState(req.params.id, req.params.stateId, function(exists, message){
 
-						if(!exists){
+						if(!exists || !message){
 							res.status(404).json({message: "App or state doesn't exist in the user's state"});
 						}
 						else{
