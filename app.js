@@ -196,6 +196,10 @@ io.on('connection', function(socket){
 				if(!objectToPeople[msg.objectId]){
 					objectToPeople[msg.objectId] = [];
 				}
+				else{
+					objectToPeople[msg.objectId].forEach(function(person){
+						io.to(people[person].socket.id).emit('userChange', {objectId: msg.objectId, online: objectToPeople[msg.objectId]});
+					});
 				if(objectToPeople[msg.objectId].indexOf(msg.uuid) === -1){
 					objectToPeople[msg.objectId].push(msg.uuid);
 				}
@@ -216,6 +220,10 @@ io.on('connection', function(socket){
 				console.log("Deleting",msg.uuid,"from",msg.objectId);
 				if(index > -1){
 					ref.splice(index,1);
+					//need to let the object know that someone has gone offline
+					ref.forEach(function(person){
+						io.to(people[person].socket.id).emit('userChange', {objectId: msg.objectId, online: ref});
+					});
 				}
 			}
 			else{
