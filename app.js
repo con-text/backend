@@ -190,7 +190,7 @@ io.on('connection', function(socket){
 			if(success){
 				// message.socketId = msg.socketId;
 				var newPacket = {state: message.state, _id: message._id, appId: message.appId,
-								owner: message.owner, collaborators: message.collaborators,
+								owner: message.owner, collaborators: message.collaborators.push(message.owner),
 								objectId: msg.objectId, online: objectToPeople[msg.objectId]};
 				if(!objectToPeople[msg.objectId]){
 					objectToPeople[msg.objectId] = [];
