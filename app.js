@@ -201,7 +201,9 @@ io.on('connection', function(socket){
 				// console.log("Sending",newPacket);
 				socket.emit('sendInitialFromBackend', newPacket);
 				objectToPeople[msg.objectId].forEach(function(person){
-						io.to(people[person].socket.id).emit('userChange', {objectId: msg.objectId, online: objectToPeople[msg.objectId]});
+						if(people[person].socket){
+							io.to(people[person].socket.id).emit('userChange', {objectId: msg.objectId, online: objectToPeople[msg.objectId]});
+						}
 				});
 			}
 			else{
