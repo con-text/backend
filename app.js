@@ -189,23 +189,20 @@ io.on('connection', function(socket){
 		syncStateSocket.get(msg.uuid, msg.objectId, function(success, message){
 			if(success){
 				// message.socketId = msg.socketId;
-				console.log("Collab from request initial",message.collaborators);
-				var newPacket = {state: message.state, _id: message._id, appId: message.appId,
-								owner: message.owner, collaborators: message.collaborators.slice(0).concat([message.owner]),
-								objectId: msg.objectId, online: objectToPeople[msg.objectId]};
 				if(!objectToPeople[msg.objectId]){
 					objectToPeople[msg.objectId] = [];
-				}
-				else{
-					objectToPeople[msg.objectId].forEach(function(person){
-						io.to(people[person].socket.id).emit('userChange', {objectId: msg.objectId, online: objectToPeople[msg.objectId]});
-					});
 				}
 				if(objectToPeople[msg.objectId].indexOf(msg.uuid) === -1){
 					objectToPeople[msg.objectId].push(msg.uuid);
 				}
+				var newPacket = {state: message.state, _id: message._id, appId: message.appId,
+								owner: message.owner, collaborators: message.collaborators.slice(0).concat([message.owner]),
+								objectId: msg.objectId, online: objectToPeople[msg.objectId]};
 				// console.log("Sending",newPacket);
 				socket.emit('sendInitialFromBackend', newPacket);
+				objectToPeople[msg.objectId].forEach(function(person){
+						io.to(people[person].socket.id).emit('userChange', {objectId: msg.objectId, online: objectToPeople[msg.objectId]});
+				});
 			}
 			else{
 				socket.emit('sendInitialFromBackend', {objectId: msg.objectId, state: false});
