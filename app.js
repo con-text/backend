@@ -143,6 +143,10 @@ var io = require('socket.io')(server);
 var people = {};
 var socketIdToPerson = {};
 var objectToPeople = {};
+
+//init objectroutes stuff
+objectRoutes.initObjectToPeople(io,objectToPeople,people);
+
 io.on('connection', function(socket){
 	console.log('a user connected to the socket server');
 
