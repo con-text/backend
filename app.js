@@ -222,7 +222,9 @@ io.on('connection', function(socket){
 					ref.splice(index,1);
 					//need to let the object know that someone has gone offline
 					ref.forEach(function(person){
-						io.to(people[person].socket.id).emit('userChange', {objectId: msg.objectId, online: ref});
+						if(people[person]){
+							io.to(people[person].socket.id).emit('userChange', {objectId: msg.objectId, online: ref});
+						}
 					});
 				}
 			}
