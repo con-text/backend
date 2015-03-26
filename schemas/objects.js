@@ -166,98 +166,51 @@ module.exports = {
 				if(!result.state)
 					result.state = {};
 
-				console.log(changeInfo.path);
-				if(changeInfo.path[0] == ''){
-					changeInfo.path.shift();
-				}
+				//do we actually want to do something with this action?
+				if(changeInfo.act){
 
 
-				var updatedValue = dealWithChange(result.state, changeInfo);
+					console.log(changeInfo.path);
+					if(changeInfo.path[0] == ''){
+						changeInfo.path.shift();
+					}
 
-				if(!updatedValue){
-					console.log("CHANGE DIDNT WORK");
-				}
+				
+					var updatedValue = dealWithChange(result.state, changeInfo);
 
-				var currentState = result.state;
-				for(var i = 0; i<changeInfo.path-1; i++){
-					currentState = currentState[changeInfo.path[i]];
-				}
+					if(!updatedValue){
+						console.log("CHANGE DIDNT WORK");
+					}
 
-				currentState[changeInfo.path.slice(-1)] = updatedValue;
+					var currentState = result.state;
+					for(var i = 0; i<changeInfo.path-1; i++){
+						currentState = currentState[changeInfo.path[i]];
+					}
 
-				console.log(result.state);
+					currentState[changeInfo.path.slice(-1)] = updatedValue;
 
-				var pathInfo;
-				if(changeInfo.path[0] === ""){
-					pathInfo = changeInfo.path.slice(1).join(".");
+					console.log(result.state);
+
+					var pathInfo;
+					if(changeInfo.path[0] === ""){
+						pathInfo = changeInfo.path.slice(1).join(".");
+					}
+					else{
+						pathInfo = changeInfo.path.join(".");
+					}
+					console.log("markmodified","state."+pathInfo);
 				}
 				else{
-					pathInfo = changeInfo.path.join(".");
+					console.log("Pushing change straight through without action");
 				}
-				console.log("markmodified","state."+pathInfo);
 				// result.markModified("state."+pathInfo);
 				objectLayer.saveState(objectId, result, function(err, doc, nt){
 					console.log("Saving state", err, nt);
 					if(!err){
-						if(changeInfo.pushedChange){
+						if(changeInfo.pushedChange || !changeInfo.act){
 							doc.pushedChange = true;
 						}
 						callback(false, doc);
-					}
-					else{
-						callback(true, err);
-					}
-				});
-			}
-		});
-	},
-	updateStateAlt: function(uuid, objectId, changeInfo, callback){
-		this.getState(uuid, objectId, function(success, result){
-			if(!success){
-				console.log("State doesn't exist", result);
-				callback(true, "State doesn't exist");
-			}
-			else{
-				if(!result.state)
-					result.state = {};
-
-				console.log(changeInfo.path);
-				if(changeInfo.path[0] == ''){
-					changeInfo.path.shift();
-				}
-
-
-				var updatedValue = dealWithChange(result.state, changeInfo);
-
-				if(!updatedValue){
-					console.log("CHANGE DIDNT WORK");
-				}
-
-				var currentState = result.state;
-				for(var i = 0; i<changeInfo.path-1; i++){
-					currentState = currentState[changeInfo.path[i]];
-				}
-
-				currentState[changeInfo.path.slice(-1)] = updatedValue;
-
-				console.log(result.state);
-
-				var pathInfo;
-				if(changeInfo.path[0] === ""){
-					pathInfo = changeInfo.path.slice(1).join(".");
-				}
-				else{
-					pathInfo = changeInfo.path.join(".");
-				}
-				console.log("markmodified","state."+pathInfo);
-				result.markModified("state."+pathInfo);
-				result.save(function(err, gotback, nt){
-					console.log("Saving state", err,nt);
-					if(!err){
-						if(changeInfo.pushedChange){
-							gotback.pushedChange = true;
-						}
-						callback(false, gotback);
 					}
 					else{
 						callback(true, err);
