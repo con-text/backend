@@ -20,8 +20,19 @@ var schema = mongoose.Schema({
 
 var model = mongoose.model("users", schema);
 
+function makeid(length)
+{
+    var text = "";
+    var possible = "0123456789";
+
+    for( var i=0; i < length; i++ )
+        text += possible.charAt(Math.floor(Math.random() * possible.length));
+
+    return text;
+}
+
 var genUniqueId = function(length,cb){
-	var uuid = (+new Date * Math.random()).toString(36).substring(0,length);
+	var uuid = makeid(length);
 	model.findOne({uuid: uuid}, function(err,result){
 		if(err){
 			//we have a problem
@@ -688,7 +699,7 @@ module.exports = {
 			else {
 				if(!result){
 					//doesn't exist, this is good, lets create
-					genUniqueId(8, function(err,uuid){
+					genUniqueId(7, function(err,uuid){
 						if(err){
 							cb(err, null);
 						}
@@ -708,7 +719,7 @@ module.exports = {
 				}
 				else{
 					//exists, we got a problem
-					cb(err, null);
+					cb("Facebook Id already exists", null);
 				}
 			}
 		});

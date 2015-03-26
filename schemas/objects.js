@@ -199,23 +199,25 @@ module.exports = {
 						pathInfo = changeInfo.path.join(".");
 					}
 					console.log("markmodified","state."+pathInfo);
+					// result.markModified("state."+pathInfo);
+					objectLayer.saveState(objectId, result, function(err, doc, nt){
+						console.log("Saving state", err, nt);
+						if(!err){
+							if(changeInfo.pushedChange){
+								doc.pushedChange = true;
+							}
+							callback(false, doc);
+						}
+						else{
+							callback(true, err);
+						}
+					});
 				}
 				else{
 					console.log("Pushing change straight through without action");
+					doc.pushedChange = true;
+					callback(false, doc)
 				}
-				// result.markModified("state."+pathInfo);
-				objectLayer.saveState(objectId, result, function(err, doc, nt){
-					console.log("Saving state", err, nt);
-					if(!err){
-						if(changeInfo.pushedChange || !changeInfo.act){
-							doc.pushedChange = true;
-						}
-						callback(false, doc);
-					}
-					else{
-						callback(true, err);
-					}
-				});
 			}
 		});
 	},
