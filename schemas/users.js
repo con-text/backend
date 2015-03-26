@@ -4,8 +4,10 @@ var mongoose = require('mongoose');
 var localCrypto = require('../lib/localCrypto.js');
 var objectsSchema = require('../schemas/objects.js');
 var hex = require('../lib/hex.js');
+var shortid = require('shortid');
 
 var schema = mongoose.Schema({
+	fbId: String,
 	name: String,
 	password: String,
 	userKey: String,
@@ -17,6 +19,26 @@ var schema = mongoose.Schema({
 });
 
 var model = mongoose.model("users", schema);
+
+var genUniqueId = function(length,cb){
+	var uuid = (+new Date * Math.random()).toString(36).substring(0,length);
+	model.findOne({uuid: uuid}, function(err,result){
+		if(err){
+			//we have a problem
+			cb(err, null);
+		}
+		else{
+			if(result){
+				//it exists, try again
+				genUniqueId(length, cb);
+			}
+			else{
+				//its worked
+				cb(null, uuid);
+			}
+		}
+	});
+}
 
 module.exports = {
 
@@ -657,5 +679,53 @@ module.exports = {
 				}
 			}
 		});
+	},
+	createUser: function(fbId, cb){
+		model.findOne({fbId: fbId}, function(err,result){
+			if(err){
+				cb(err, null);
+			}
+			else {
+				if(!result){
+					//doesn't exist, this is good, lets create
+					genUniqueId(8, function(err,uuid){
+						if(err){
+							cb(err, null);
+						}
+						else{
+							// cb(null, result);
+							var newUser = new model({uuid: uuid, fbId: fbId, name:"temp name holder"});
+							newUser.save(function(err){
+								if(err){
+									cb(err, null);
+								}
+								else{
+									cb(null, uuid);
+								}
+							});
+						}
+					});
+				}
+				else{
+					//exists, we got a problem
+					cb(err, null);
+				}
+			}
+		});
+	},
+	createUserRoute: function(req,res){
+		if(req.body.fbId){
+			module.exports.createUser(req.body.fbId, function(err,uuid){
+				if(err){
+					res.status(400).send(err);
+				}
+				else{
+					res.send(uuid);
+				}
+			});
+		}
+		else{
+			res.status(400).send("Missing FB Id");
+		}
 	}
 };

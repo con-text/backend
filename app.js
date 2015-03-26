@@ -68,6 +68,7 @@ app.get('/', function (req, res) {
 //The code that the front end uses in the login page to get the profile picture
 //from a uuid
 app.get('/users/:id', user.getFromUID);
+app.post('/users', user.createUserRoute);
 
 
 //routes for app states
@@ -75,6 +76,8 @@ app.get('/users/:id/apps', user.getAppStates);
 app.post('/users/:id/apps', user.postAppStates);
 app.get('/users/:id/apps/:appId', user.getApp);
 app.post('/users/:id/apps/:appId', user.postSingleState);
+
+
 
 app.get('/users/:id/apps/:appId/states/:stateId', user.getSingleState);
 app.put('/users/:id/apps/:appId/states/:stateId', user.updateSingleState);
