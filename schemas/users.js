@@ -719,7 +719,7 @@ module.exports = {
 				}
 				else{
 					//exists, we got a problem
-					cb("Facebook Id already exists", null);
+					cb(result.uuid, null);
 				}
 			}
 		});
