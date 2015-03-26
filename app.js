@@ -200,6 +200,7 @@ io.on('connection', function(socket){
 					objectToPeople[msg.objectId].forEach(function(person){
 						io.to(people[person].socket.id).emit('userChange', {objectId: msg.objectId, online: objectToPeople[msg.objectId]});
 					});
+				}
 				if(objectToPeople[msg.objectId].indexOf(msg.uuid) === -1){
 					objectToPeople[msg.objectId].push(msg.uuid);
 				}
