@@ -133,6 +133,7 @@ app.get('/testRoute/dec/:ciphertext/:mac/:key', cryptoTest.dec);
 
 
 app.post('/devices/associate', devicesRoutes.assoc);
+app.post('/devices/deassociate', devicesRoutes.deassoc);
 
 
 var server = app.listen(process.env.PORT || 3000, main);

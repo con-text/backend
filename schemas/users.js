@@ -691,6 +691,37 @@ module.exports = {
 			}
 		});
 	},
+	deassocDevice: function(userId, deviceId, cb){
+		model.findOne({deviceId: deviceId}, 'deviceId', function(err,result){
+			if(err){
+				cb(err);
+			}
+			else if(!result){
+				//hasn't been assoced
+				cb("Device hasn't been assoced");
+			}
+			else{
+				if(result.deviceId){
+					//ok to assoc
+					result.deviceId = null;
+					result.save(function(err,doc,nx){
+						if(err){
+							cb(err);
+						}
+						else if(nx == 0){
+							cb("No documents updated");
+						}
+						else{
+							cb(false);
+						}
+					})
+				}
+				else{
+					cb("Device hasn't been assoced");
+				}
+			}
+		});
+	},
 	createUser: function(fbId, cb){
 		model.findOne({fbId: fbId}, function(err,result){
 			if(err){
