@@ -5,6 +5,7 @@ var localCrypto = require('../lib/localCrypto.js');
 var objectsSchema = require('../schemas/objects.js');
 var hex = require('../lib/hex.js');
 var shortid = require('shortid');
+var graph = require('fbgraph');
 
 var schema = mongoose.Schema({
 	fbId: String,
@@ -722,8 +723,8 @@ module.exports = {
 			}
 		});
 	},
-	createUser: function(fbId, cb){
-		model.findOne({fbId: fbId}, function(err,result){
+	createUser: function(info, cb){
+		model.findOne({fbId: info.fbId}, function(err,result){
 			if(err){
 				cb(err, null);
 			}
@@ -736,7 +737,7 @@ module.exports = {
 						}
 						else{
 							// cb(null, result);
-							var newUser = new model({uuid: uuid, fbId: fbId, name:"temp name holder"});
+							var newUser = new model({uuid: uuid, fbId: info.fbId, name:info.name, profilePicUrl: info.profilePicUrl});
 							newUser.save(function(err){
 								if(err){
 									cb(err, null);
@@ -757,13 +758,23 @@ module.exports = {
 	},
 	createUserRoute: function(req,res){
 		if(req.body.fbId){
-			module.exports.createUser(req.body.fbId, function(err,uuid){
-				if(err){
-					res.status(400).send(err);
+			graph
+			.get(req.body.fbId, function(err, response) {
+				if(!res || res.error){
+					response.send(!res ? 'error occurred' : res.error);
+					return;
 				}
-				else{
-					res.send(uuid);
-				}
+				graph.get(req.body.fbId + '/picture?type=large', function(err,pictureResponse){
+					// console.log(res);
+					module.exports.createUser({fbId: response.id, name: response.name, profilePicUrl: pictureResponse.location}, function(err,uuid){
+						if(err){
+							res.status(400).send(err);
+						}
+						else{
+							res.send(uuid);
+						}
+					});
+				})
 			});
 		}
 		else{
