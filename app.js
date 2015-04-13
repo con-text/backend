@@ -249,7 +249,7 @@ io.on('connection', function(socket){
 		console.log("Got statechange",msg.uuid,msg.objectId,msg.value,"from socketClient");
 		//the state needs to be synced with the backend here
 		syncStateSocket.post(msg.uuid, msg.objectId, msg, function(error, message){
-			console.log("State changed and updated in db, send changes to collab", message.collaborators);
+			// console.log("State changed and updated in db, send changes to collab", message.collaborators);
 
 			//try send the changes to everyone who needs to know about it
 			if(!message.collaborators){
@@ -258,7 +258,7 @@ io.on('connection', function(socket){
 				return;
 			}
 			var toSendTo = message.collaborators.concat(message.owner);
-			console.log(toSendTo);
+			// console.log(toSendTo);
 			toSendTo.forEach(function(person){
 				//the person exists in the array AND it's not the original sender
 				if(people[person] && person !== msg.uuid){

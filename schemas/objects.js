@@ -1,8 +1,6 @@
 'use strict';
 
 var mongoose = require('mongoose');
-var richText = require('rich-text');
-var Delta = richText.Delta;
 
 
 var schema = mongoose.Schema({
@@ -57,9 +55,6 @@ var dealWithChange = function(obj, changeInfo){
 				case "array":
 					return parseArrayChange(obj, changeInfo.path, changeInfo.splice, changeInfo.value);
 
-				case "string":
-					return updateTextValue(obj, changeInfo.path, changeInfo.value, changeInfo);
-
 				case "number":
 				default:
 					return updateValueFromArray(obj, changeInfo.path, changeInfo.property, changeInfo.value);
@@ -92,44 +87,6 @@ function parseArrayChange(obj, arr, splice, value){
 		obj.splice(splice.index, 0, value);
 	}
 	return obj;
-}
-
-
-var updateTextValue = function(obj,arr,value, changeInfo){
-	console.log("UPDATING VALUES");
-	//loop through until we're at the right object
-	for(var i = 0; i<arr.length; i++){
-		obj = obj[arr[i]];
-		if(obj === undefined){
-			return false;
-		}
-	}
-	if(changeInfo.OTChanges){
-		//this needs to be done through OT, build the delta array first
-		//then apply the changes
-		var origObj = new Delta(obj);
-		var deltaObj = new Delta(value);
-		origObj.compose(deltaObj);
-		obj = origObj.ops;
-	}
-	else{
-		obj = value;
-	}
-	return obj;
-};
-
-function applyChange(startText, changes){
-	var text = startText;
-	changes.forEach(function(change){
-		console.log("Applying","'"+change.text+"'", "to",text, change.cursor);
-		if(change.action === 1){
-			text = new ot.TextOperation().retain(change.cursor).insert(change.text).retain(text.length - change.cursor).apply(text);
-		}
-		else if(change.action === -1){
-			text = new ot.TextOperation().retain(change.cursor).delete(change.text).retain(text.length - change.text.length - change.cursor).apply(text);
-		}
-	});
-	return text;
 }
 
 module.exports = {
@@ -176,47 +133,68 @@ module.exports = {
 					}
 
 				
-					var updatedValue = dealWithChange(result.state, changeInfo);
+					if(changeInfo.type === "string"){
 
-					if(!updatedValue){
-						console.log("CHANGE DIDNT WORK");
-					}
+						//need to push the delta instead of the new string
+						objectLayer.pushDelta(objectId, changeInfo, function(err,doc,nt){
+							// console.log("Pushing delta", err, nt);
+							if(!err){
+								if(changeInfo.pushedChange){
+									doc.pushedChange = true;
+								}
+								callback(false, doc);
+							}
+							else{
+								callback(true, err);
+							}
+						});
 
-					var currentState = result.state;
-					for(var i = 0; i<changeInfo.path-1; i++){
-						currentState = currentState[changeInfo.path[i]];
-					}
-
-					currentState[changeInfo.path.slice(-1)] = updatedValue;
-
-					console.log(result.state);
-
-					var pathInfo;
-					if(changeInfo.path[0] === ""){
-						pathInfo = changeInfo.path.slice(1).join(".");
 					}
 					else{
-						pathInfo = changeInfo.path.join(".");
-					}
-					console.log("markmodified","state."+pathInfo);
-					// result.markModified("state."+pathInfo);
-					objectLayer.saveState(objectId, result, function(err, doc, nt){
-						console.log("Saving state", err, nt);
-						if(!err){
-							if(changeInfo.pushedChange){
-								doc.pushedChange = true;
-							}
-							callback(false, doc);
+
+						var updatedValue = dealWithChange(result.state, changeInfo);
+
+						if(!updatedValue){
+							console.log("CHANGE DIDNT WORK");
+						}
+
+						var currentState = result.state;
+						for(var i = 0; i<changeInfo.path-1; i++){
+							currentState = currentState[changeInfo.path[i]];
+						}
+
+						currentState[changeInfo.path.slice(-1)] = updatedValue;
+
+						console.log(result.state);
+
+						var pathInfo;
+						if(changeInfo.path[0] === ""){
+							pathInfo = changeInfo.path.slice(1).join(".");
 						}
 						else{
-							callback(true, err);
+							pathInfo = changeInfo.path.join(".");
 						}
-					});
+						console.log("markmodified","state."+pathInfo);
+						// result.markModified("state."+pathInfo);
+						objectLayer.saveState(objectId, result, function(err, doc, nt){
+							console.log("Saving state", err, nt);
+							if(!err){
+								if(changeInfo.pushedChange){
+									doc.pushedChange = true;
+								}
+								callback(false, doc);
+							}
+							else{
+								callback(true, err);
+							}
+						});
+					}
+
 				}
 				else{
 					console.log("Pushing change straight through without action");
-					doc.pushedChange = true;
-					callback(false, doc)
+					result.pushedChange = true;
+					callback(false, result)
 				}
 			}
 		});
