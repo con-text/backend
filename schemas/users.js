@@ -7,6 +7,8 @@ var hex = require('../lib/hex.js');
 var shortid = require('shortid');
 var graph = require('fbgraph');
 
+graph.setAccessToken("1571ef3327356fcdc305da5f61a83213");
+
 var schema = mongoose.Schema({
 	fbId: String,
 	name: String,
@@ -757,14 +759,14 @@ module.exports = {
 		});
 	},
 	createUserRoute: function(req,res){
-		if(req.body.fbId){
+		if(req.body.fbId && req.body.accessToken){
 			graph
-			.get(req.body.fbId, function(err, response) {
-				if(!res || res.error){
-					response.send(!res ? 'error occurred' : res.error);
+			.get(req.body.fbId + "?access_token=" + req.body.accessToken, function(err, response) {
+				if(err|| response.error){
+					res.status(400).send(!err ? 'error occurred' : response.error.message);
 					return;
 				}
-				graph.get(req.body.fbId + '/picture?type=large', function(err,pictureResponse){
+				graph.get(req.body.fbId + '/picture?type=large&access_token='+req.body.accessToken, function(err,pictureResponse){
 					// console.log(res);
 					module.exports.createUser({fbId: response.id, name: response.name, profilePicUrl: pictureResponse.location}, function(err,uuid){
 						if(err){
@@ -778,7 +780,7 @@ module.exports = {
 			});
 		}
 		else{
-			res.status(400).send("Missing FB Id");
+			res.status(400).send("Missing FB Id or accessToken");
 		}
 	}
 };
