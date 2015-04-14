@@ -83,6 +83,8 @@ module.exports = {
 			}
 			else{
 				// debug("fetching block");
+				console.log("server key",data.serverKey);
+				console.log("randomData",randomDataFromClient);
 				var block = localCrypto.encryptData(data.serverKey, randomDataFromClient);
 				callback(null, block);
 			}
