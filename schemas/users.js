@@ -3,6 +3,7 @@
 var mongoose = require('mongoose');
 var localCrypto = require('../lib/localCrypto.js');
 var objectsSchema = require('../schemas/objects.js');
+var devices = require('../schemas/devices.js');
 var hex = require('../lib/hex.js');
 var shortid = require('shortid');
 var graph = require('fbgraph');
@@ -82,11 +83,14 @@ module.exports = {
 				callback("User doesn't exist");
 			}
 			else{
-				// debug("fetching block");
-				console.log("server key",data.serverKey);
-				console.log("randomData",randomDataFromClient);
-				var block = localCrypto.encryptData(data.serverKey, randomDataFromClient);
-				callback(null, block);
+				devices.fetchKeys(data.deviceId, function(err, keys){
+					if(err){
+						callback(err);
+						return;
+					}
+					var block = localCrypto.encryptData(keys.serverKey, randomDataFromClient);
+					callback(null, block);
+				});
 			}
 		});
 	},
@@ -116,10 +120,14 @@ module.exports = {
 				callback("User doesn't exist");
 			}
 			else{
-				// debug("fetching block");
-				// debug(data);
-				var block = localCrypto.decryptData(data.serverKey, ourRandomData);
-				callback(null, block);
+				devices.fetchKeys(data.deviceId, function(err, keys){
+					if(err){
+						callback(err);
+						return;
+					}
+					var block = localCrypto.decryptData(keys.serverKey, ourRandomData);
+					callback(null, block);
+				});
 			}
 		});
 	},

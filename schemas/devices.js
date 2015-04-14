@@ -39,5 +39,15 @@ module.exports = {
 				cb("Device already exists");
 			}
 		});
+	},
+	fetchKeys: function(deviceId, cb){
+		model.findOne({deviceId:deviceId}, function(err,result){
+			if(err || !result){
+				cb("Device doesn't exist", null);
+			}
+			else{
+				cb(null, {serverKey: result.serverKey, userKey: result.userKey});
+			}
+		});
 	}
 }
