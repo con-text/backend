@@ -215,8 +215,8 @@ module.exports = {
 				}
 				else{
 					console.log("Pushing change straight through without action");
-					doc.pushedChange = true;
-					callback(false, doc)
+					changeInfo.pushedChange = true;
+					callback(false, changeInfo)
 				}
 			}
 		});
