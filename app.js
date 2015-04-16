@@ -72,6 +72,8 @@ app.get('/', function (req, res) {
 app.get('/users/:id', user.getFromUID);
 app.post('/users', user.createUserRoute);
 
+app.get('/users/:id/location', user.getLastLocation);
+
 
 //routes for app states
 app.get('/users/:id/apps', user.getAppStates);

@@ -19,7 +19,8 @@ var schema = mongoose.Schema({
 	profilePicUrl: String,
 	uuid: String,
 	apps: Array,
-	deviceId: String
+	deviceId: String,
+	locations: [Object]
 });
 
 var model = mongoose.model("users", schema);
@@ -792,5 +793,15 @@ module.exports = {
 		else{
 			res.status(400).send("Missing FB Id or accessToken");
 		}
+	},
+	getLastLocation: function(req,res){
+		model.findOne({uuid: req.params.id}, 'locations', function(err,result){
+			if(err || !result){
+				res.status(404).send("User not found");
+			}
+			else{
+				res.json({lat: 51.4682, lng: -2.5869, lastTime: 1429220443});
+			}
+		});
 	}
 };
