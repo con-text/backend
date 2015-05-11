@@ -779,7 +779,10 @@ module.exports = {
 				}
 				graph.get(req.body.fbId + '/picture?type=large&access_token='+req.body.accessToken, function(err,pictureResponse){
 					// console.log(res);
-					module.exports.createUser({fbId: response.id, name: response.name, profilePicUrl: pictureResponse.location}, function(err,uuid){
+					var apps = [{"id": "89447cef-0ee6-4805-942b-bc790e89dce2", "states": []},
+								{"id": "89447cef-0ee6-4805-942b-bc790e89dce1", "states": []},
+								{"id": "e8a6e0ca-b060-11e4-ab7d-12e3f512a338", "states": []}];
+					module.exports.createUser({fbId: response.id, name: response.name, profilePicUrl: pictureResponse.location, apps: apps}, function(err,uuid){
 						if(err){
 							res.status(400).send(err);
 						}
@@ -800,7 +803,7 @@ module.exports = {
 				res.status(404).send("User not found");
 			}
 			else{
-				res.json({lat: 51.4682, lng: -2.5869, lastTime: 1429220443});
+				res.json({lat: 51.4682, lng: -2.5869, lastTime: parseInt((Date.now()-10000)/1000, 10)});
 			}
 		});
 	}

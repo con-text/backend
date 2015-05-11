@@ -135,7 +135,29 @@ function applyChange(startText, changes){
 module.exports = {
 	getState: function(uuid, objectId, callback){
 		uuid = uuid.toLowerCase();
-		objectLayer.getState(uuid, objectId, callback);
+		model.findOne({_id: objectId}, function(err,result){
+			console.log("looking for object",objectId);
+			if(err || !result){
+				callback(true, err);
+			}
+			else{
+				//found the object, check that this user has access
+
+				var found = false;
+				result.collaborators.forEach(function(collaborator){
+					if(collaborator.toLowerCase() === uuid){
+						found = true;
+					}
+				});
+
+				if(found || result.owner.toLowerCase() === uuid){
+					callback(false, result);
+				}
+				else{
+					callback(true, "User doesn't have access to this object");
+				}
+			}
+		});
 	},
 	createState: function(uuid, appId, state, callback){
 
@@ -157,7 +179,7 @@ module.exports = {
 		});
 	},
 	updateState: function(uuid, objectId, changeInfo, callback){
-		objectLayer.getState(uuid, objectId, function(error, result){
+		this.getState(uuid, objectId, function(error, result){
 			if(error){
 				console.log("State doesn't exist", error, result);
 				callback(true, "State doesn't exist");
@@ -200,7 +222,7 @@ module.exports = {
 					}
 					console.log("markmodified","state."+pathInfo);
 					// result.markModified("state."+pathInfo);
-					objectLayer.saveState(objectId, result, function(err, doc, nt){
+					this.saveState(objectId, result, function(err, doc, nt){
 						console.log("Saving state", err, nt);
 						if(!err){
 							if(changeInfo.pushedChange){
