@@ -429,11 +429,13 @@ module.exports = {
 							res.status(404).json({message: "App or state doesn't exist in the user's state"});
 						}
 						else{
-							message.collaborators.forEach(function(collab){
-								if(collab.toLowerCase() === req.params.id.toLowerCase()){
-									found = true;
-								}
-							});
+							if(message.collaborators){
+								message.collaborators.forEach(function(collab){
+									if(collab.toLowerCase() === req.params.id.toLowerCase()){
+										found = true;
+									}
+								});
+							}
 							if(found){
 								objectsSchema.getObjects([req.params.stateId], function(err,docs){
 									if(err || docs.length === 0){

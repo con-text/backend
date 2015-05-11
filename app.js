@@ -25,7 +25,7 @@ var fs = require('fs');
 var redisConfig = require('./lib/config/redis');
 var bodyParser = require('body-parser');
 
-app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.urlencoded({ extended: false, limit: '50mb' }));
 
 // parse application/json
 app.use(bodyParser.json());

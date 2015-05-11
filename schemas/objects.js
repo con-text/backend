@@ -169,7 +169,7 @@ module.exports = {
 		if(!state){
 			state = {};
 		}
-		var newState = new model({owner: uuid, appId: appId, state: state });
+		var newState = new model({owner: uuid, appId: appId, state: state, collaborators: [] });
 		newState.save(function(err){
 			if(err){
 				callback(err);
