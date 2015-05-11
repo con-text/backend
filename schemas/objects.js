@@ -59,7 +59,8 @@ var dealWithChange = function(obj, changeInfo){
 
 				case "string":
 					return updateTextValue(obj, changeInfo.path, changeInfo.value, changeInfo);
-
+				case "staticString":
+					return updateValueFromArray(obj, changeInfo.path, changeInfo.property, changeInfo.value);
 				case "number":
 				default:
 					return updateValueFromArray(obj, changeInfo.path, changeInfo.property, changeInfo.value);
@@ -222,13 +223,15 @@ module.exports = {
 					}
 					console.log("markmodified","state."+pathInfo);
 					// result.markModified("state."+pathInfo);
-					this.saveState(objectId, result, function(err, doc, nt){
+					result.markModified("state."+pathInfo);
+					result.save(function(err, gotback, nt){
+					// result.save(objectId, result, function(err, doc, nt){
 						console.log("Saving state", err, nt);
 						if(!err){
 							if(changeInfo.pushedChange){
-								doc.pushedChange = true;
+								gotback.pushedChange = true;
 							}
-							callback(false, doc);
+							callback(false, gotback);
 						}
 						else{
 							callback(true, err);
