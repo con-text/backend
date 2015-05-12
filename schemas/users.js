@@ -783,7 +783,8 @@ module.exports = {
 					// console.log(res);
 					var apps = [{"id": "89447cef-0ee6-4805-942b-bc790e89dce2", "states": []},
 								{"id": "89447cef-0ee6-4805-942b-bc790e89dce1", "states": []},
-								{"id": "e8a6e0ca-b060-11e4-ab7d-12e3f512a338", "states": []}];
+								{"id": "e8a6e0ca-b060-11e4-ab7d-12e3f512a338", "states": []},
+								{"id": "0676d282-349d-4385-915a-29f5a216d019", "states": []}];
 					module.exports.createUser({fbId: response.id, name: response.name, profilePicUrl: pictureResponse.location, apps: apps}, function(err,uuid){
 						if(err){
 							res.status(400).send(err);
