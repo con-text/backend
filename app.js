@@ -289,9 +289,14 @@ redisClientSub.on("message", function(channel, message){
 	notification = notification || {};
 	var personId = notification.userToShareId;
 
+	console.log("REDIS: Got a notification", notification);
+	console.log("REDIS: Decide what to do", people[personId].socket);
+
 	if(personId && people[personId]) {
 		io.to(people[personId].socket.id).emit('notification', notification);
+		console.log("REDIS: Store a pending notification", notification, personId);
 	} else if(personId) {
+		console.log("REDIS: Store a pending notification", notification, personId);
 		// Store notification to wait for user to log in
 		redisClient.lpush(personId, message);
 	}
