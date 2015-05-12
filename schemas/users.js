@@ -752,7 +752,7 @@ module.exports = {
 						}
 						else{
 							// cb(null, result);
-							var newUser = new model({uuid: uuid, fbId: info.fbId, name:info.name, profilePicUrl: info.profilePicUrl});
+							var newUser = new model({uuid: uuid, fbId: info.fbId, name:info.name, profilePicUrl: info.profilePicUrl, apps: info.apps});
 							newUser.save(function(err){
 								if(err){
 									cb(err, null);
