@@ -854,7 +854,8 @@ module.exports = {
 				res.status(404).send("User not found");
 			}
 			else{
-				res.json({lat: 51.4682, lng: -2.5869, lastTime: parseInt((Date.now()-10000)/1000, 10)});
+				// 51.4558608,-2.6028875
+				res.json({lat: 51.4558608, lng: -2.6028875, lastTime: parseInt((Date.now()-10000)/1000, 10)});
 			}
 		});
 	}
