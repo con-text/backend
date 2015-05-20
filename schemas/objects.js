@@ -13,7 +13,10 @@ var schema = mongoose.Schema({
 	title: String,
 
 	// Window related stuff
-	isOpened: Boolean,
+
+	properties: Object,
+
+	isOpened: Object,
 	x: Number,
 	y: Number
 });

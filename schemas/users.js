@@ -181,6 +181,13 @@ module.exports = {
 				objectsSchema.getObjects(objectList, function(err,docs){
 					docs.forEach(function(doc){
 
+						//filter out the isOpened flag for the user in question, if it exists
+						if(typeof doc.isOpened === "object"){
+							if(typeof doc.isOpened[req.parmas.id] !== "undefined"){
+								doc.isOpened = (doc.isOpened[req.params.id] == "true");
+							}
+						}
+
 						//update the value from result with the fetched document
 						var mapping = keyToIdx[doc._id];
 						result.apps[mapping.i].states[mapping.j] = doc;
@@ -270,6 +277,19 @@ module.exports = {
 				}
 
 				objectsSchema.getObjects(returnApp.states, function(err,docs){
+					// console.log(docs);
+					docs.forEach(function(doc){
+						if(typeof doc.properties === "object" && typeof doc.properties[req.params.id] === "object"){
+							Object.keys(doc.properties[req.params.id]).forEach(function(key){
+								doc[key] = doc.properties[req.params.id][key];
+							});
+						}
+						// if(typeof doc.isOpened === "object"){
+						// 	if(typeof doc.isOpened[req.params.id] !== "undefined"){
+						// 		doc.isOpened = doc.isOpened[req.params.id];
+						// 	}
+						// }
+					});
 					res.json(docs);
 				})
 			}
@@ -446,9 +466,23 @@ module.exports = {
 									// Update the object
 									Object.keys(req.body).forEach(function(key){
 
-										console.log('updating ' + key);
-										docs[0][key] = req.body[key];
-										docs[0].markModified(key);
+										console.log('Iupdating ' + key);
+										if(typeof docs[0]['properties'] === "undefined"){
+											docs[0]['properties'] = {};
+										}
+										if(typeof docs[0]['properties'][req.params.id] === 'undefined'){
+											docs[0]['properties'][req.params.id] = {};
+										}
+										switch(key){
+											case 'x':
+											case 'y':
+												docs[0]['properties'][req.params.id][key] = parseInt(req.body[key], 10);
+											break;
+											case 'isOpened':
+												docs[0]['properties'][req.params.id][key] = (req.body[key] == 'true');
+											break;
+										}
+										docs[0].markModified('properties');
 									});
 
 
@@ -491,9 +525,23 @@ module.exports = {
 						// Update the object
 						Object.keys(req.body).forEach(function(key){
 
-							console.log('updating ' + key);
-							docs[0][key] = req.body[key];
-							docs[0].markModified(key);
+							console.log('Iupdating ' + key);
+							if(typeof docs[0]['properties'] === "undefined"){
+								docs[0]['properties'] = {};
+							}
+							if(typeof docs[0]['properties'][req.params.id] === 'undefined'){
+								docs[0]['properties'][req.params.id] = {};
+							}
+							switch(key){
+								case 'x':
+								case 'y':
+									docs[0]['properties'][req.params.id][key] = parseInt(req.body[key], 10);
+								break;
+								case 'isOpened':
+									docs[0]['properties'][req.params.id][key] = (req.body[key] == 'true');
+								break;
+							}
+							docs[0].markModified('properties');
 						});
 
 						// Save it the object
