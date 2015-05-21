@@ -251,6 +251,10 @@ module.exports = {
 	},
 	getObjects: function(idArray, cb){
 
+		if(idArray === undefined){
+			cb("Empty ID array", null);
+			return;
+		}
 		if(typeof idArray[0] === "object"){
 			console.log("Found object type");
 			idArray.forEach(function(id, idx){

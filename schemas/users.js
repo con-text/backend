@@ -279,6 +279,12 @@ module.exports = {
 
 				objectsSchema.getObjects(returnApp.states, function(err,docs){
 					// console.log(docs);
+					if(err){
+						//there's been an error
+						console.log("get objects error", err);
+						res.json([])
+						return;
+					}
 					docs.forEach(function(doc){
 						if(typeof doc.properties === "object" && typeof doc.properties[req.params.id] === "object"){
 							Object.keys(doc.properties[req.params.id]).forEach(function(key){
@@ -833,6 +839,7 @@ module.exports = {
 					var apps = [{"id": "89447cef-0ee6-4805-942b-bc790e89dce2", "states": []},
 								{"id": "89447cef-0ee6-4805-942b-bc790e89dce1", "states": []},
 								{"id": "e8a6e0ca-b060-11e4-ab7d-12e3f512a338", "states": []},
+								{"id": "89447cef-0ee6-4805-942b-bc790e89d123", "states": []},
 								{"id": "0676d282-349d-4385-915a-29f5a216d019", "states": []}];
 					module.exports.createUser({fbId: response.id, name: response.name, profilePicUrl: pictureResponse.location, apps: apps}, function(err,uuid){
 						if(err){
