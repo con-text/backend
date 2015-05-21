@@ -877,7 +877,6 @@ module.exports = {
 						cb(err);
 					}
 					else{
-						console.log("UPDATED LAST LOGIN TO", result.lastLogin);
 						cb(null);
 					}
 				});
