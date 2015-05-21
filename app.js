@@ -170,6 +170,13 @@ io.on('connection', function(socket){
 					});
 				}
 			});
+
+			//i know this is async, but it's ok
+			user.updateLastLogin(msg.uuid, function(err){
+				if(err){
+					console.log("Error updating last login time", err);
+				}
+			});
 		}
 		else{
 			console.log("USER ID MISSING FROM INITROOM PACKET");

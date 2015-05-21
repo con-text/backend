@@ -20,7 +20,8 @@ var schema = mongoose.Schema({
 	uuid: String,
 	apps: Array,
 	deviceId: String,
-	locations: [Object]
+	locations: [Object],
+	lastLogin: { type: Number, default: 0 }
 });
 
 var model = mongoose.model("users", schema);
@@ -849,13 +850,37 @@ module.exports = {
 		}
 	},
 	getLastLocation: function(req,res){
-		model.findOne({uuid: req.params.id}, 'locations', function(err,result){
+		model.findOne({uuid: req.params.id}, 'locations lastLogin', function(err,result){
 			if(err || !result){
 				res.status(404).send("User not found");
 			}
 			else{
-				// 51.4558608,-2.6028875
-				res.json({lat: 51.4558608, lng: -2.6028875, lastTime: parseInt((Date.now()-10000)/1000, 10)});
+				if(result.lastLogin === 0){
+					res.json({});
+				}
+				else{
+					// 51.4558608,-2.6028875
+					res.json({lat: 51.4558608, lng: -2.6028875, lastTime: parseInt(result.lastLogin/1000, 10)});
+				}
+			}
+		});
+	},
+	updateLastLogin: function(uuid, cb){
+		model.findOne({uuid: uuid}, function(err,result){
+			if(err || !result){
+				cb(err || "No user returned");
+			}
+			else{
+				result.lastLogin = Date.now();
+				result.save(function(err){
+					if(err){
+						cb(err);
+					}
+					else{
+						console.log("UPDATED LAST LOGIN TO", result.lastLogin);
+						cb(null);
+					}
+				});
 			}
 		});
 	}
